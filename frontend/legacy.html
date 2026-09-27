@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="mr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PM-AJAY उपजीविका सहाय्यक</title>
+  <style>
+    :root {
+      --bg: #fdf8f3;
+      --card: #fff;
+      --ink: #2b2118;
+      --accent: #c2571b;
+      --accent2: #1b6b3a;
+      --line: #e8ddd0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans Devanagari UI', 'Nirmala UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px 20px 40px;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    h1 {
+      font-size: 1.45rem;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      line-height: 1.5;
+      margin: 18px 0;
+    }
+
+    .sub {
+      text-align: center;
+      color: #7a6a58;
+      font-size: .9rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 12px;
+      box-shadow: 0 2px 8px rgba(43, 33, 24, .06);
+    }
+
+    .dots {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 10px 0 4px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--line);
+    }
+
+    .dot.done {
+      background: var(--accent2);
+    }
+
+    .dot.cur {
+      background: var(--accent);
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 1.15rem;
+      padding: 16px;
+      border-radius: 14px;
+      border: 2px solid var(--accent);
+      background: #fff;
+      color: var(--accent);
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.yesno {
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    input[type=tel],
+    input[type=text] {
+      font-family: inherit;
+      font-size: 1.2rem;
+      padding: 14px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .chip {
+      font-size: .95rem;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1.5px solid var(--accent);
+      background: #fff;
+      color: var(--accent);
+      cursor: pointer;
+      margin: 0;
+      width: auto;
+      font-weight: 500;
+    }
+
+    .chip.sel {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .echo {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      padding: 14px;
+      background: #f3ead9;
+      border-radius: 12px;
+      margin-top: 8px;
+    }
+
+    .notice {
+      font-size: .85rem;
+      color: #7a6a58;
+      margin-top: 12px;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .linkbtn {
+      font-size: .85rem;
+      color: #7a6a58;
+      background: none;
+      border: none;
+      text-decoration: underline;
+      padding: 4px;
+      width: auto;
+      margin: 8px 0 0;
+    }
+
+    .summary {
+      line-height: 1.9;
+      font-size: 1.05rem;
+    }
+
+    .rec {
+      border-left: 5px solid var(--accent2);
+      margin-top: 12px;
+    }
+
+    .rec .title {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .rec .meta {
+      color: #7a6a58;
+      font-size: .9rem;
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+
+    .rec a {
+      color: var(--accent2);
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 1.05rem;
+    }
+
+    .flag {
+      display: inline-block;
+      font-size: .75rem;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 6px;
+      padding: 2px 8px;
+      margin-right: 6px;
+    }
+
+    .stale {
+      color: #b3261e;
+      font-size: .8rem;
+    }
+
+    .err {
+      color: #b3261e;
+      text-align: center;
+      margin-top: 10px;
+      font-size: .95rem;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="screen active" id="s-phone">
+    <h1>PM-AJAY</h1>
+    <p class="sub" id="sub_t">उपजीविका सहाय्यक</p>
+    <div class="card">
+      <h2 id="phone_q">तुमचा मोबाइल नंबर टाका</h2>
+      <input type="tel" id="phone" placeholder="98XXXXXXXX" autocomplete="tel">
+      <button class="primary" id="phone_btn" onclick="startSession()">पुढे जा</button>
+      <p class="err" id="phone_err"></p>
+    </div>
+  </div>
+
+  <div class="screen" id="s-lang">
+    <div class="card">
+      <h2>तुम्ही कोणत्या भाषेत बोलू इच्छिता?<br>आप किस भाषा में बात करना चाहेंगे?</h2>
+      <button class="primary" onclick="pickLang('mr')">मराठी</button>
+      <button onclick="pickLang('hi')">हिंदी</button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-consent">
+    <div class="card">
+      <h2 id="consent_q"></h2>
+      <button class="primary" id="consent_btn" onclick="consent(true)">1 — सहमत</button>
+      <button class="linkbtn" id="consent_more" onclick="toggleNotice()"></button>
+      <p class="notice" id="notice"></p>
+    </div>
+  </div>
+
+  <div class="screen" id="s-resume">
+    <div class="card">
+      <h2 id="resume_q"></h2>
+      <p class="summary" id="resume_sum"></p>
+      <button class="primary" id="resume_ok" onclick="resumeOk(true)"></button>
+      <button id="resume_chg" onclick="resumeOk(false)"></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-slot">
+    <div class="dots" id="dots"></div>
+    <div class="card">
+      <h2 id="slot_q"></h2>
+      <div id="slot_input"></div>
+      <p class="err" id="slot_err"></p>
+    </div>
+  </div>
+
+  <div class="screen" id="s-echo">
+    <div class="card">
+      <h2 id="echo_q"></h2>
+      <div class="echo" id="echo_val"></div>
+      <button class="primary" id="echo_ok" onclick="confirmSlot(true)"></button>
+      <button id="echo_no" onclick="confirmSlot(false)"></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-recs">
+    <div class="card">
+      <h2 id="recs_title"></h2>
+      <div id="recs_list"></div>
+    </div>
+  </div>
+
+  <script>
+    // Dialogue script (Day 2). Written once; Day 3 adds voice (Web Speech API) on top.
+    const D = {
+      mr: {
+        phone_q: "तुमचा मोबाइल नंबर टाका",
+        consent: "तुमची उत्तरे तुमच्यासाठी योग्य प्रशिक्षण शोधण्यात मदत करतात. आम्ही ती सरकारबाहेर कोणालाही देत नाही.",
+        consent_btn: "1 — सहमत",
+        consent_more: "अधिक माहिती",
+        notice: "संपूर्ण सूचना: तुमची उत्तरे फक्त तुमच्यासाठी योग्य प्रशिक्षण शोधण्यासाठी वापरली जातात. तुमचा नंबर आणि उत्तरे एकत्र साठवली जात नाहीत. कोणताही लाभ मिळवण्यापूर्वी आधार तपासणी स्वतंत्रपणे होते. तुम्हाला कधीही आमच्या यादीतून नाव काढण्याचा अधिकार आहे.",
+        resume_q: "मागच्या वेळी तुम्ही सांगितले होते. अजून बरोबर आहे का?",
+        resume_ok: "बरोबर आहे",
+        resume_chg: "काही बदलले आहे",
+        said: "तुम्ही म्हणालात:",
+        correct: "बरोबर",
+        again: "पुन्हा",
+        yes: "होय", no: "नाही",
+        send: "पाठवा",
+        recs_title: "तुमच्यासाठी योग्य कोर्स",
+        months: "महिने", level: "लेव्हल",
+        call: "कॉल करा",
+        no_centre: "जवळचे प्रशिक्षण केंद्र आढळले नाही",
+        err: "काहीतरी चुकले. पुन्हा प्रयत्न करा.",
+        speak_slow: "स्पष्ट ऐकेना आले — पुन्हा बोला",
+        dist: "अंतर", km: "किमी",
+        stale: "जुनी माहिती",
+        override_flag: "आवडीनुसार",
+        override_note: "हा कोर्स तुमची आवड लक्षात घेऊन दाखवत आहोत — थोडी अतिरिक्त तयारी लागेल.",
+      },
+      hi: {
+        phone_q: "अपना मोबाइल नंबर डालें",
+        consent: "आपके उत्तर आपके लिए सही प्रशिक्षण खोजने में मदद करते हैं। हम उन्हें सरकार के बाहर किसी को नहीं देते।",
+        consent_btn: "1 — सहमत",
+        consent_more: "अधिक जानकारी",
+        notice: "पूरी सूचना: आपके उत्तर केवल आपके लिए सही प्रशिक्षण खोजने के लिए उपयोग होते हैं। आपका नंबर और उत्तर एक साथ संग्रहीत नहीं होते। कोई भी लाभ पाने से पहले आधार जाँच अलग से होती है। आप कभी भी हमारी सूची से अपना नाम हटवा सकते हैं।",
+        resume_q: "पिछली बार आपने यह बताया था। क्या अभी भी सही है?",
+        resume_ok: "सही है",
+        resume_chg: "कुछ बदल गया है",
+        said: "आपने कहा:",
+        correct: "सही",
+        again: "फिर से",
+        yes: "हाँ", no: "नहीं",
+        send: "भेजें",
+        recs_title: "आपके लिए सही कोर्स",
+        months: "महीने", level: "स्तर",
+        call: "कॉल करें",
+        no_centre: "पास का प्रशिक्षण केंद्र नहीं मिला",
+        err: "कुछ गड़बड़ हुई। फिर कोशिश करें।",
+        speak_slow: "स्पष्ट नहीं सुना — फिर बोलें",
+        dist: "दूरी", km: "किमी",
+        stale: "पुरानी जानकारी",
+        override_flag: "रुचि के अनुसार",
+        override_note: "यह कोर्स आपकी रुचि के अनुसार है — थोड़ी अतिरिक्त तैयारी चाहिए।",
+      }
+    };
+
+    // LGD codes mirror backend/seed.py DISTRICTS. ponytail: unverified except Pune 523.
+    const DATA_MR = {
+      sub: "उपजीविका सहाय्यक",
+      phone_btn: "पुढे जा",
+      phone_err: "10 अंकी नंबर टाका",
+      edu: [[0, "कधी शिकले नाही"], [5, "5वी"], [8, "8वी"], [10, "10वी"], [12, "12वी"], [15, "पदवी"]],
+      pref: [["self_employment", "स्वतःचा व्यवसाय"], ["wage", "नोकरी"]],
+      interest_chips: [["tailoring", "शिवणकाम"], ["farming", "शेती"], ["carpentry", "सुतारकाम"], ["beauty", "सौंदर्य"], ["mobile repair", "मोबाइल दुरुस्ती"], ["shop", "दुकान"]],
+      family_chips: [["agricultural labour", "शेतमजूरी"], ["farming", "शेती"], ["carpentry", "सुतारकाम"], ["pottery", "कुंभारकाम"], ["leatherwork", "चांभारकाम"], ["tailoring", "शिंपीकाम"]],
+      slot_label: { district_name: "जिल्हा", education_grade: "शिक्षण", primary_interest: "आवड", mobility_constraint: "अडचण", preference: "व्यवसाय/नोकरी", family_occupation: "घरचे काम", nearest_market: "जवळचे बाजार", language: "भाषा" },
+    };
+    const DATA_HI = {
+      sub: "आजीविका सहायक",
+      phone_btn: "आगे बढ़ें",
+      phone_err: "10 अंकों का नंबर डालें",
+      edu: [[0, "कभी नहीं पढ़ा"], [5, "5वीं"], [8, "8वीं"], [10, "10वीं"], [12, "12वीं"], [15, "स्नातक"]],
+      pref: [["self_employment", "अपना व्यवसाय"], ["wage", "नौकरी"]],
+      interest_chips: [["tailoring", "सिलाई"], ["farming", "खेती"], ["carpentry", "बढ़ई"], ["beauty", "ब्यूटी"], ["mobile repair", "मोबाइल दुरुस्ती"], ["shop", "दुकानदारी"]],
+      family_chips: [["agricultural labour", "कृषि मजदूरी"], ["farming", "खेती"], ["carpentry", "बढ़ई"], ["pottery", "कुम्हार"], ["leatherwork", "चर्मकार"], ["tailoring", "दर्जी"]],
+      slot_label: { district_name: "जिला", education_grade: "शिक्षा", primary_interest: "रुचि", mobility_constraint: "दिक्कत", preference: "व्यवसाय/नौकरी", family_occupation: "घर का काम", nearest_market: "पास का बाज़ार", language: "भाषा" },
+    };
+
+    const $ = id => document.getElementById(id);
+    let EDU, PREF, INTEREST_CHIPS, FAMILY_CHIPS; // set by loadData(); SLOTS below reads them after
+    let SLOT_LABEL = DATA_MR.slot_label;
+
+    function loadData(l) {
+      const d = l === "hi" ? DATA_HI : DATA_MR;
+      EDU = d.edu; PREF = d.pref; INTEREST_CHIPS = d.interest_chips; FAMILY_CHIPS = d.family_chips;
+      SLOT_LABEL = d.slot_label;
+      $("sub_t").textContent = d.sub;
+      $("phone_btn").textContent = d.phone_btn;
+      $("phone_q").textContent = D[l].phone_q;
+    }
+    loadData("mr");
+
+    const DISTRICTS = [["Pune", "523"], ["Mumbai Suburban", "520"], ["Nashik", "527"], ["Nagpur", "528"], ["Solapur", "534"], ["Kolhapur", "530"], ["Chhatrapati Sambhajinagar", "516"], ["Amravati", "514"], ["Satara", "531"], ["Ahmednagar", "515"]];
+
+
+    // 7 slots; language (8th) is picked on the lang screen.
+    const SLOTS = [
+      {
+        key: "district_name", type: "choice", opts: DISTRICTS.map(d => [d[0], d[0]]),
+        q: { mr: "तुम्ही कोणत्या जिल्ह्यात राहता?", hi: "आप किस जिले में रहते हैं?" }
+      },
+      {
+        key: "education_grade", type: "choice", opts: EDU,
+        q: { mr: "तुम्ही कोणत्या श्रेणीपर्यंत शिकलात?", hi: "आप किस कक्षा तक पढ़े हैं?" }
+      },
+      {
+        key: "primary_interest", type: "text", chips: INTEREST_CHIPS,
+        q: { mr: "तुम्हाला कोणते काम आवडते?", hi: "आपको कौन सा काम पसंद है?" }
+      },
+      {
+        key: "mobility_constraint", type: "yesno",
+        q: { mr: "तुम्हाला चालण्यात किंवा काम करण्यात अडचण आहे का?", hi: "आपको चलने या काम करने में दिक्कत है?" }
+      },
+      {
+        key: "preference", type: "choice", opts: PREF,
+        q: { mr: "तुम्हाला स्वतःचा व्यवसाय हवा आहे की नोकरी?", hi: "आपको अपना व्यवसाय चाहिए या नौकरी?" }
+      },
+      {
+        key: "family_occupation", type: "text", chips: FAMILY_CHIPS,
+        q: { mr: "तुमच्या घरात पारंपरिकरित्या कोणते काम चालते?", hi: "आपके घर में पारंपरिक रूप से कौन सा काम चलता है?" }
+      },
+      {
+        key: "nearest_market", type: "text",
+        q: { mr: "तुमच्या जवळचे बाजार किंवा गाव कोणते?", hi: "आपके पास का बाज़ार या कस्बा कौन सा है?" }
+      },
+    ];
+
+    const API = location.port === "8000" ? "" : "http://localhost:8000";
+    let sid = null, lang = "mr", slotIdx = 0, reAsks = 0, pending = null, confirmed = {};
+
+    const show = id => { document.querySelectorAll(".screen").forEach(s => s.classList.remove("active")); $(id).classList.add("active"); };
+    const t = k => D[lang][k];
+
+    async function api(path, opts) {
+      const r = await fetch(API + path, opts);
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    }
+
+    // TTS: read questions and echoes aloud (Day 3). Guarded — silent if unsupported.
+    function speak(txt) {
+      if (!("speechSynthesis" in window)) return;
+      try { const u = new SpeechSynthesisUtterance(txt); u.lang = lang === "mr" ? "mr-IN" : "hi-IN"; u.rate = 0.9; speechSynthesis.speak(u); } catch (e) { }
+    }
+
+    // Mic input via Web Speech API (Day 3). Confidence gate: <0.75 re-prompts once (C1), then accepts.
+    function startListen(onDone) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return;
+      const rec = new SR();
+      rec.lang = lang === "mr" ? "mr-IN" : "hi-IN";
+      rec.onresult = e => onDone(e.results[0][0].transcript, e.results[0][0].confidence);
+      rec.onerror = () => { $("slot_err").textContent = t("err"); $("slot_err").style.display = "block"; };
+      rec.start();
+    }
+
+    async function startSession() {
+      const phone = $("phone").value.trim();
+      $("phone_err").style.display = "none";
+      if (!/^\d{10}$/.test(phone)) { $("phone_err").textContent = (lang === "hi" ? DATA_HI : DATA_MR).phone_err; $("phone_err").style.display = "block"; return; }
+      try {
+        const res = await api("/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone }) });
+        sid = res.session_id; confirmed = res.confirmed_slots || {};
+        // Once language fixed for a profile, reuse it (don't ask again)
+        if (confirmed.language) { lang = confirmed.language; loadData(lang); showResume(); return; }
+        show("s-lang"); // if no language yet, bilingual opening lets user pick
+      } catch { $("phone_err").textContent = t("err"); $("phone_err").style.display = "block"; }
+    }
+
+    function pickLang(l) {
+      lang = l;
+      saveSlots({ language: l }); // 8th slot, fire-and-forget
+      $("consent_q").textContent = t("consent");
+      $("consent_btn").textContent = t("consent_btn");
+      $("consent_more").textContent = t("consent_more");
+      $("notice").textContent = t("notice");
+      if (Object.keys(confirmed).some(k => SLOTS.some(s => s.key === k))) showResume();
+      else show("s-consent");
+    }
+
+    function toggleNotice() { const n = $("notice"); n.style.display = n.style.display === "block" ? "none" : "block"; }
+
+    function consent(ok) {
+      if (!ok) return;
+      saveSlots({ consent_given: true }); // H7: session does not proceed without it
+      startSlots();
+    }
+
+    const dispOf = (k, v) => ({
+      education_grade: (EDU.find(e => e[0] === v) || [, v])[1],
+      preference: (PREF.find(p => p[0] === v) || [, v])[1],
+      mobility_constraint: v ? D[lang].yes : D[lang].no,
+      language: v === "mr" ? "मराठी" : "हिंदी",
+    }[k] ?? v);
+
+    function showResume() {
+      $("resume_q").textContent = t("resume_q");
+      let html = "";
+      for (const [k, v] of Object.entries(confirmed)) if (SLOT_LABEL[k]) html += `<b>${SLOT_LABEL[k]}:</b> ${dispOf(k, v)}<br>`;
+      $("resume_sum").innerHTML = html;
+      $("resume_ok").textContent = t("resume_ok");
+      $("resume_chg").textContent = t("resume_chg");
+      show("s-resume");
+    }
+
+    function resumeOk(same) {
+      if (!same) { confirmed = {}; }
+      startSlots();
+    }
+
+    function startSlots() {
+      if (confirmed.district_name) saveSlots({ district_lgd: String((DISTRICTS.find(d => d[0] === confirmed.district_name) || [, ""])[1]) });
+      slotIdx = SLOTS.findIndex(s => !(s.key in confirmed));
+      if (slotIdx === -1) { finish(); return; }
+      if (slotIdx < 0) slotIdx = 0;
+      renderSlot();
+    }
+
+    function renderDots() {
+      const el = $("dots"); el.innerHTML = "";
+      SLOTS.forEach((s, i) => { const d = document.createElement("div"); d.className = "dot" + (i < slotIdx ? " done" : i === slotIdx ? " cur" : ""); el.appendChild(d); });
+    }
+
+    function renderSlot() {
+      renderDots();
+      const s = SLOTS[slotIdx];
+      $("slot_q").textContent = s.q[lang];
+      speak(s.q[lang]);
+      $("slot_err").style.display = "none";
+      const box = $("slot_input"); box.innerHTML = "";
+      if (s.type === "choice") {
+        s.opts.forEach(([val, label]) => {
+          const b = document.createElement("button");
+          b.textContent = label;
+          if (val === "self_employment" || s.key === "education_grade") b.classList.add("yesno");
+          b.onclick = () => echo(val, label);
+          box.appendChild(b);
+        });
+      } else if (s.type === "yesno") {
+        [["yes", "1"], ["no", "2"]].forEach(([yn]) => {
+          const b = document.createElement("button"); b.className = "yesno";
+          b.textContent = t(yn === "yes" ? "yes" : "no");
+          b.onclick = () => echo(yn === "yes", t(yn));
+          box.appendChild(b);
+        });
+      } else {
+        const inp = document.createElement("input"); inp.type = "text"; inp.placeholder = "...";
+        const b = document.createElement("button"); b.className = "primary"; b.textContent = t("send");
+        b.onclick = () => { if (inp.value.trim()) echo(inp.value.trim(), inp.value.trim()); else { $("slot_err").textContent = t("err"); $("slot_err").style.display = "block"; } };
+        if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+          const mic = document.createElement("button"); mic.textContent = (lang === "hi" ? "🎤 बोलें" : "🎤 बोला");
+          mic.onclick = () => {
+            let tries = 0;
+            const onDone = (txt, conf) => {
+              if ((conf || 0) < 0.75 && tries < 1) { tries++; $("slot_err").textContent = t("speak_slow"); $("slot_err").style.display = "block"; startListen(onDone); return; }
+              $("slot_err").style.display = "none";
+              inp.value = txt; echo(txt, txt);
+            };
+            startListen(onDone);
+          };
+          box.appendChild(mic);
+        }
+        if (s.chips) {
+          const wrap = document.createElement("div"); wrap.className = "chips";
+          s.chips.forEach(([val, label]) => {
+            const c = document.createElement("button"); c.className = "chip"; c.textContent = label;
+            c.onclick = () => { inp.value = val; echo(val, label); };
+            wrap.appendChild(c);
+          });
+          box.appendChild(wrap);
+        }
+        box.appendChild(inp); box.appendChild(b);
+      }
+      show("s-slot");
+    }
+
+    function echo(val, display) {
+      pending = { key: SLOTS[slotIdx].key, val, display };
+      $("echo_q").textContent = t("said");
+      $("echo_val").textContent = display;
+      speak(t("said") + " " + display);
+      $("echo_ok").textContent = t("correct");
+      // F2.1: never ask the same question more than twice — after 1 re-ask, auto-accept
+      $("echo_no").style.display = reAsks >= 1 ? "none" : "block";
+      $("echo_no").textContent = t("again");
+      show("s-echo");
+    }
+
+    function confirmSlot(ok) {
+      if (!ok) { reAsks++; renderSlot(); return; }
+      reAsks = 0;
+      confirmed[pending.key] = pending.val;
+      const payload = { [pending.key]: pending.val };
+      if (pending.key === "district_name") payload.district_lgd = String((DISTRICTS.find(d => d[0] === pending.val) || [, ""])[1]);
+      saveSlots(payload); // H5: persisted after every slot
+      slotIdx++;
+      if (slotIdx >= SLOTS.length) finish(); else renderSlot();
+    }
+
+    function saveSlots(slots) {
+      api(`/session/${sid}/profile`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slots }) }).catch(() => { });
+    }
+
+    async function finish() {
+      renderDots();
+      try {
+        const res = await api(`/session/${sid}/recommendations`);
+        $("recs_title").textContent = t("recs_title");
+        const list = $("recs_list"); list.innerHTML = "";
+        if (!res.recommendations.length) list.innerHTML = `<p>${t("err")}</p>`;
+        res.recommendations.forEach(r => {
+          const div = document.createElement("div"); div.className = "card rec";
+          div.innerHTML = `<div class="title">${r.title}</div>
+        <div class="meta">${r.sector} · NSQF ${t("level")} ${r.nsqf_level} · ${r.duration_months} ${t("months")} · ${r.scheme}
+        ${r.centre ? `<br>${r.centre.name}${r.distance_km != null ? ` · ${t("dist")} ${r.distance_km} ${t("km")}` : ""}${r.centre_stale ? ` · <span class="stale">${t("stale")}</span>` : ""} · <a href="tel:${r.centre.phone}">${r.centre.phone}</a>` : `<br>${t("no_centre")}`}</div>`;
+          list.appendChild(div);
+        });
+        if (res.aspiration_override) {
+          const r = res.aspiration_override;
+          const div = document.createElement("div"); div.className = "card rec";
+          div.innerHTML = `<div class="title"><span class="flag">${t("override_flag")}</span> ${r.title}</div>
+        <div class="meta">${r.sector} · NSQF ${t("level")} ${r.nsqf_level} · ${r.duration_months} ${t("months")}
+        ${r.centre ? `<br>${r.centre.name}${r.distance_km != null ? ` · ${t("dist")} ${r.distance_km} ${t("km")}` : ""} · <a href="tel:${r.centre.phone}">${r.centre.phone}</a>` : `<br>${t("no_centre")}`}</div>
+        <p style="margin-top:8px">${t("override_note")}</p>`;
+          list.appendChild(div);
+        }
+      } catch { $("recs_title").textContent = t("err"); }
+      show("s-recs");
+    }
+  </script>
+</body>
+
+</html>

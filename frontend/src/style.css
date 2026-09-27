@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/* shadcn-style CSS variables, mapped to the PM-AJAY warm palette */
+:root {
+  --background: #fdf8f3;
+  --foreground: #2b2118;
+  --card: #ffffff;
+  --card-foreground: #2b2118;
+  --primary: #c2571b;
+  --primary-foreground: #ffffff;
+  --secondary: #1b6b3a;
+  --secondary-foreground: #ffffff;
+  --muted: #f3ead9;
+  --muted-foreground: #7a6a58;
+  --accent: #f3ead9;
+  --accent-foreground: #2b2118;
+  --destructive: #b3261e;
+  --border: #e8ddd0;
+  --input: #e8ddd0;
+  --ring: #c2571b;
+  --radius: 1rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Noto Sans Devanagari UI", "Nirmala UI", system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+.wrap { width: 100%; max-width: 480px; padding: 24px 20px 40px; }
+.dots { display: flex; gap: 8px; justify-content: center; margin: 10px 0 4px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+.dot.done { background: var(--secondary); }
+.dot.cur { background: var(--primary); }
+table .dot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; }
+.green { background: #1b6b3a; }
+.amber { background: #c98a1b; }
+.red { background: #b3261e; }
+.echo { font-size: 1.15rem; line-height: 1.6; padding: 14px; background: var(--muted); border-radius: 12px; margin-top: 8px; }
+.notice { font-size: .85rem; color: var(--muted-foreground); margin-top: 12px; line-height: 1.6; }
+.summary { line-height: 1.9; font-size: 1.05rem; }
+.rec { border-left: 5px solid var(--secondary); margin-top: 12px; }
+.bar { background: #eee; border-radius: 8px; height: 14px; overflow: hidden; margin: 4px 0 10px; }
+.bar i { display: block; height: 100%; background: var(--primary); }

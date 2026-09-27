@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM-AJAY — Admin Dashboard</title>
+<style>
+  :root { --bg:#f6f4ef; --card:#fff; --ink:#2b2118; --accent:#c2571b; --accent2:#1b6b3a; --line:#e2d9cc; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Noto Sans Devanagari UI','Nirmala UI',system-ui,sans-serif; background:var(--bg); color:var(--ink); padding:24px; }
+  h1 { font-size:1.3rem; }
+  h2 { font-size:.85rem; margin:0 0 12px; color:#7a6a58; text-transform:uppercase; letter-spacing:.05em; }
+  .wrap { max-width:960px; margin:0 auto; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:16px 0; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; }
+  .kpi { font-size:2rem; font-weight:700; }
+  .kpi small { display:block; font-size:.8rem; color:#7a6a58; font-weight:400; margin-top:4px; }
+  table { width:100%; border-collapse:collapse; font-size:.95rem; }
+  th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; }
+  .green { background:#1b6b3a; } .amber { background:#c98a1b; } .red { background:#b3261e; }
+  .bar { background:#eee; border-radius:8px; height:14px; overflow:hidden; margin:4px 0 10px; }
+  .bar i { display:block; height:100%; background:var(--accent); }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+  .btn { display:inline-block; margin-top:12px; padding:10px 16px; background:var(--accent2); color:#fff; border-radius:10px; text-decoration:none; font-weight:600; }
+  .mini { font-size:.8rem; padding:4px 10px; margin:0; width:auto; border-radius:8px; }
+  .note { font-size:.8rem; color:#7a6a58; margin-top:16px; }
+  @media (max-width:640px){ .row2 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>PM-AJAY — GIA Dashboard <span style="font-size:.8rem;color:#7a6a58">(Pune pilot)</span></h1>
+  <div class="grid" id="kpis"></div>
+  <div class="row2">
+    <div class="card"><h2>District RAG (perspective plan)</h2><table id="rag"></table></div>
+    <div class="card"><h2>Top recommended courses</h2><table id="top"></table></div>
+  </div>
+  <div class="row2">
+    <div class="card"><h2>Education</h2><div id="edu"></div></div>
+    <div class="card"><h2>Interest</h2><div id="int"></div></div>
+  </div>
+  <div class="row2">
+    <div class="card"><h2>Language split</h2><div id="lang"></div></div>
+    <div class="card"><h2>Training centres (C6)</h2><div id="centres"></div><table id="centretbl"></table></div>
+  </div>
+  <a class="btn" id="export" href="#">Ministry export (CSV)</a>
+  <p class="note">Aggregate-only view — individual records require supervisor-approved audit-log access (C3). Demo: no admin auth (RBAC per B3.1 before pilot).</p>
+</div>
+<script>
+const API = location.port === "8000" ? "" : "http://localhost:8000";
+const EDU = {0:"No schooling", 5:"Class 5", 8:"Class 8", 10:"Class 10", 12:"Class 12", 15:"Graduate"};
+const $ = id => document.getElementById(id);
+function bars(el, obj, labelFn) {
+  const max = Math.max(1, ...Object.values(obj));
+  for (const [k, v] of Object.entries(obj))
+    el.insertAdjacentHTML("beforeend",
+      `<div>${labelFn ? labelFn(k) : k} — ${v}</div><div class="bar"><i style="width:${100 * v / max}%"></i></div>`);
+}
+function load() {
+fetch(API + "/admin/stats").then(r => r.json()).then(a => {
+  $("kpis").innerHTML =
+    `<div class="card kpi">${a.total_sessions}<small>sessions started</small></div>
+     <div class="card kpi">${a.consented}<small>consent given (H7)</small></div>
+     <div class="card kpi">${a.completed}<small>profiles completed</small></div>
+     <div class="card kpi">${a.this_week}<small>this week</small></div>
+     <div class="card kpi">${a.anomalies}<small>anomaly flags (H9)</small></div>`;
+  $("rag").innerHTML = "<tr><th>District</th><th>Profiled</th><th>Target</th><th>Status</th></tr>" +
+    a.rag.map(r => `<tr><td>${r.district}</td><td>${r.profiled}</td><td>${r.target}</td><td><span class="dot ${r.status}"></span>${r.status}</td></tr>`).join("");
+  $("top").innerHTML = "<tr><th>Course</th><th>Shown</th></tr>" +
+    a.top_recommended.map(t => `<tr><td>${t.qp_title}</td><td>${t.count}</td></tr>`).join("");
+  bars($("edu"), a.by_education, k => EDU[k] || k);
+  bars($("int"), a.by_interest);
+  bars($("lang"), a.by_language, k => k === "mr" ? "मराठी" : "हिंदी");
+  $("centres").innerHTML = `${a.centres.active} active · ${a.centres.stale} stale (>30 days, greyed out) · ${a.centres.unresponsive} unresponsive`;
+  $("export").href = API + "/admin/export.csv";
+  fetch(API + "/admin/centres").then(r => r.json()).then(c => {
+    $("centretbl").innerHTML = "<tr><th>Centre</th><th>Status</th><th>Verified</th><th></th></tr>" +
+      c.centres.map(r => {
+        const isStale = (Date.now() - new Date(r.last_verified).getTime()) / 864e5 > 30;
+        const act = r.status === "active"
+          ? `<button class="mini" onclick="flag(${r.id},'unresponsive')">Mark unresponsive</button>`
+          : `<button class="mini" onclick="flag(${r.id},'active')">Reactivate</button>`;
+        return `<tr><td>${r.name}</td><td>${r.status}${isStale ? " · <span class='stale'>stale</span>" : ""}</td><td>${r.last_verified}</td><td>${act}</td></tr>`;
+      }).join("");
+  });
+});
+}
+function flag(id, status) {
+  fetch(API + "/admin/centre/" + id + "/status", {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({status})}).then(load);
+}
+load();
+</script>
+</body>
+</html>

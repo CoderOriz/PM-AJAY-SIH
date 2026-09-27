@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "PM-AJAY Companion",
+  "version": "2.0",
+  "description": "Voice livelihood assistant for PM-AJAY GIA beneficiaries and CSC operators",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Open PM-AJAY Assistant"
+  },
+  "permissions": ["sidePanel", "scripting", "activeTab"],
+  "side_panel": {
+    "default_path": "../../frontend/index.html"
+  },
+  "icons": {
+    "48": "icon48.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
