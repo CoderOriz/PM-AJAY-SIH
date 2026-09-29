@@ -7,13 +7,7 @@
     "default_popup": "popup.html",
     "default_title": "Open PM-AJAY Assistant"
   },
-  "permissions": ["sidePanel", "scripting", "activeTab"],
-  "side_panel": {
-    "default_path": "../../frontend/index.html"
-  },
-  "icons": {
-    "48": "icon48.png"
-  },
+  "permissions": ["scripting", "activeTab"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

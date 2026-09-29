@@ -1,24 +1,27 @@
 @import "tailwindcss";
 
-/* shadcn-style CSS variables, mapped to the PM-AJAY warm palette */
+/* shadcn theme — PM-AJAY warm palette (stone base, terracotta primary) */
 :root {
   --background: #fdf8f3;
   --foreground: #2b2118;
   --card: #ffffff;
   --card-foreground: #2b2118;
+  --popover: #ffffff;
+  --popover-foreground: #2b2118;
   --primary: #c2571b;
-  --primary-foreground: #ffffff;
+  --primary-foreground: #fff8f2;
   --secondary: #1b6b3a;
-  --secondary-foreground: #ffffff;
+  --secondary-foreground: #f0faf4;
   --muted: #f3ead9;
   --muted-foreground: #7a6a58;
   --accent: #f3ead9;
   --accent-foreground: #2b2118;
   --destructive: #b3261e;
+  --destructive-foreground: #fff5f4;
   --border: #e8ddd0;
-  --input: #e8ddd0;
+  --input: #e2d5c4;
   --ring: #c2571b;
-  --radius: 1rem;
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -26,6 +29,8 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -35,32 +40,45 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 0.25rem);
+  --radius-2xl: calc(var(--radius) + 0.5rem);
 }
+
+* { border-color: var(--border); }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: "Noto Sans Devanagari UI", "Nirmala UI", system-ui, sans-serif;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
+  -webkit-font-smoothing: antialiased;
 }
 
-.wrap { width: 100%; max-width: 480px; padding: 24px 20px 40px; }
-.dots { display: flex; gap: 8px; justify-content: center; margin: 10px 0 4px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+::selection { background: var(--primary); color: var(--primary-foreground); }
+
+/* Layout: mobile-first column, comfortable on desktop */
+.wrap { width: 100%; max-width: 480px; margin-inline: auto; padding: 16px 16px 48px; }
+@media (min-width: 768px) { .wrap { max-width: 560px; padding: 32px 24px 64px; } }
+
+/* Progress dots — current slot becomes a pill (no numbers, F3.1) */
+.dots { display: flex; gap: 10px; justify-content: center; align-items: center; margin: 12px 0 6px; }
+.dot { width: 12px; height: 12px; border-radius: 999px; background: var(--border); transition: all .25s ease; }
 .dot.done { background: var(--secondary); }
-.dot.cur { background: var(--primary); }
-table .dot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; }
+.dot.cur { background: var(--primary); width: 28px; }
+table .dot { width: 10px; height: 10px; margin-right: 8px; }
 .green { background: #1b6b3a; }
 .amber { background: #c98a1b; }
 .red { background: #b3261e; }
-.echo { font-size: 1.15rem; line-height: 1.6; padding: 14px; background: var(--muted); border-radius: 12px; margin-top: 8px; }
+
+/* Dialogue */
+.echo { font-size: 1.1rem; line-height: 1.6; padding: 14px 16px; background: var(--muted); border-radius: 12px; margin-top: 8px; }
 .notice { font-size: .85rem; color: var(--muted-foreground); margin-top: 12px; line-height: 1.6; }
 .summary { line-height: 1.9; font-size: 1.05rem; }
-.rec { border-left: 5px solid var(--secondary); margin-top: 12px; }
-.bar { background: #eee; border-radius: 8px; height: 14px; overflow: hidden; margin: 4px 0 10px; }
-.bar i { display: block; height: 100%; background: var(--primary); }
+.rec { border-left: 4px solid var(--secondary); }
+.bar { background: var(--muted); border-radius: 999px; height: 10px; overflow: hidden; margin: 4px 0 10px; }
+.bar i { display: block; height: 100%; background: var(--primary); border-radius: 999px; transition: width .4s ease; }

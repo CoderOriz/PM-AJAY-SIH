@@ -82,9 +82,9 @@ export default function Admin() {
   const opTotal = stats.operators?.total || 0;
 
   return (
-    <div className="wrap" style={{ maxWidth: 960 }}>
+    <div className="mx-auto w-full max-w-5xl px-4 py-6">
       <h1 className="text-xl font-bold mt-2">PM-AJAY — GIA Dashboard <span className="text-xs font-normal text-muted-foreground">(Pune pilot)</span></h1>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
         <Card><CardContent className="p-4"><div className="text-3xl font-bold">{stats.total_sessions}<small className="block text-xs text-muted-foreground font-normal mt-1">sessions started</small></div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-3xl font-bold">{stats.consented}<small className="block text-xs text-muted-foreground font-normal mt-1">consent given (H7)</small></div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-3xl font-bold">{stats.completed}<small className="block text-xs text-muted-foreground font-normal mt-1">profiles completed</small></div></CardContent></Card>

@@ -1,58 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 import { D, DATA, DISTRICTS, SLOTS, slotOptions, slotChips, dispOf } from "./dialogue";
-import { api } from "./api";
+import { api, saveSlots } from "./api";
 import { speak, startListen, hasSR, preloadVoices } from "./voice";
-import { Button } from "./components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
-import { Badge } from "./components/ui/badge";
-import { Input } from "./components/ui/input";
+import { RecCard } from "./components/Beneficiary/RecCard";
+import { Button, Badge, Card, CardContent, CardHeader, CardTitle, Input } from "./components/ui";
 
 const GAP_VARIANT = { zero: "success", partial: "warning", major: "destructive" };
 
-function RecCard({ r, t }) {
-  return (
-    <Card className="rec">
-      <CardContent className="pt-2">
-        <div className="flex flex-wrap items-center gap-2">
-          {r.pinned && <Badge>{t("pinned_badge")}</Badge>}
-          {r.rpl && <Badge variant="secondary">{t("rpl_badge")}</Badge>}
-          <span className="font-bold text-[1.1rem]">{r.title}</span>
-        </div>
-        <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-          {r.sector} · NSQF {t("level")} {r.nsqf_level} · {r.duration_months} {t("months")} · {r.scheme}
-          <div className="mt-1">
-            <Badge variant={GAP_VARIANT[r.gap]} className="mr-2">{t("gap_" + r.gap)}</Badge>
-            {r.centre
-              ? <> · {r.centre.name}{r.distance_km != null ? ` · ${t("dist")} ${r.distance_km} ${t("km")}` : ""}{r.centre_stale ? ` · ${t("stale")}` : ""} · <a className="font-bold text-secondary" href={`tel:${r.centre.phone}`}>{r.centre.phone}</a></>
-              : <> · {t("no_centre")}</>}
-          </div>
-          {r.rpl && (
-            <div className="mt-1.5">
-              {t("coord")}: <a className="font-bold text-secondary" href={`tel:${r.rpl.coordinator}`}>{r.rpl.coordinator}</a> — {r.rpl.note}
-            </div>
-          )}
-          {r.dropout_risk === "high" && <div className="mt-1.5 text-destructive font-medium">{t("dropout_warn")}</div>}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export default function Beneficiary() {
+export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
   const [screen, setScreen] = useState("phone");
   const [lang, setLang] = useState("mr");
   const [sid, setSid] = useState(null);
   const [confirmed, setConfirmed] = useState({});
   const [slotIdx, setSlotIdx] = useState(0);
   const [reAsks, setReAsks] = useState(0);
-  const [pending, setPending] = useState(null); // {val, display}
+  const [pending, setPending] = useState(null);
   const [phone, setPhone] = useState("");
   const [err, setErr] = useState("");
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [recs, setRecs] = useState(null);
   const [textVal, setTextVal] = useState("");
-  const [opMode, setOpMode] = useState(false);
-  const [opId, setOpId] = useState("");
   const [contactedDone, setContactedDone] = useState(false);
   const [followupDone, setFollowupDone] = useState(false);
   const micTries = useRef(0);
@@ -60,7 +27,6 @@ export default function Beneficiary() {
   const t = k => D[lang][k];
   const d = DATA[lang];
 
-  // TTS: read every screen aloud (consent H7, resume C4, questions, partial recs, results)
   useEffect(() => { preloadVoices(); }, []);
   useEffect(() => {
     if (screen === "consent") speak(t("consent"), lang);
@@ -74,12 +40,9 @@ export default function Beneficiary() {
     setErr("");
     if (!/^\d{10}$/.test(phone)) { setErr(d.phone_err); return; }
     try {
-      const res = await api("/session", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
-      });
+      const res = await api("/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phone }) });
       setSid(res.session_id);
-      if (opMode) { // H6: assisted sessions require a certified operator
+      if (opMode) {
         try {
           await api(`/session/${res.session_id}/profile`, {
             method: "POST", headers: { "Content-Type": "application/json" },
@@ -89,113 +52,49 @@ export default function Beneficiary() {
       }
       setConfirmed(res.confirmed_slots || {});
       if (res.confirmed_slots && res.confirmed_slots.language) {
-        // C4: profile language fixed once — resume directly, don't ask again
         setLang(res.confirmed_slots.language);
         setScreen("resume");
       } else setScreen("lang");
     } catch { setErr(t("err")); }
   }
 
-  function pickLang(l) {
-    setLang(l);
-    api(`/session/${sid}/profile`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slots: { language: l } }),
-    }).catch(() => {});
-    const hasSlots = Object.keys(confirmed).some(k => SLOTS.some(s => s.key === k));
-    setScreen(hasSlots ? "resume" : "consent");
-  }
-
-  function consent() {
-    api(`/session/${sid}/profile`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slots: { consent_given: true } }),
-    }).catch(() => {}); // H7: session does not proceed without it
-    startSlots(confirmed);
-  }
-
-  function startSlots(conf) {
-    const idx = SLOTS.findIndex(s => !(s.key in conf));
-    if (idx === -1) { finish(); return; }
-    setSlotIdx(idx);
-    setReAsks(0);
-    setScreen("slot");
-  }
-
-  function resumeOk(same) {
-    startSlots(same ? confirmed : {}); // C4: "something changed" re-asks every slot
-  }
-
-  function echo(val, display) {
-    setPending({ val, display });
-    speak(t("said") + " " + display, lang);
-    setScreen("echo");
-  }
-
+  function pickLang(l) { setLang(l); api(`/session/${sid}/profile`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slots: { language: l } }) }).catch(() => {}); const hasSlots = Object.keys(confirmed).some(k => SLOTS.some(s => s.key === k)); setScreen(hasSlots ? "resume" : "consent"); }
+  function consent() { api(`/session/${sid}/profile`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slots: { consent_given: true } }) }).catch(() => {}); startSlots(confirmed); }
+  function startSlots(conf) { const idx = SLOTS.findIndex(s => !(s.key in conf)); if (idx === -1) { finish(); return; } setSlotIdx(idx); setReAsks(0); setScreen("slot"); }
+  function resumeOk(same) { startSlots(same ? confirmed : {}); }
+  function echo(val, display) { setPending({ val, display }); speak(t("said") + " " + display, lang); setScreen("echo"); }
   async function confirmSlot(ok) {
     if (!ok) { setReAsks(r => r + 1); setTextVal(""); setScreen("slot"); return; }
     const key = SLOTS[slotIdx].key;
     const nc = { ...confirmed, [key]: pending.val };
     setConfirmed(nc);
     const payload = { [key]: pending.val };
-    if (key === "district_name")
-      payload.district_lgd = String((DISTRICTS.find(x => x[0] === pending.val) || [, ""])[1]);
-    api(`/session/${sid}/profile`, { // H5: persisted after every slot
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slots: payload }),
-    }).catch(() => {});
+    if (key === "district_name") payload.district_lgd = String((DISTRICTS.find(x => x[0] === pending.val) || [, ""])[1]);
+    await api(`/session/${sid}/profile`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slots: payload }) }).catch(() => {});
     setTextVal("");
-    if (slotIdx + 1 >= SLOTS.length) { finish(); }
+    if (slotIdx + 1 >= SLOTS.length) finish();
     else if (SLOTS[slotIdx].call === 1 && SLOTS[slotIdx + 1].call === 2) {
-      // H2: Call 1 complete — deliver the partial recommendation
-      try { setRecs(await api(`/session/${sid}/recommendations`)); } catch { /* recs optional here */ }
+      try { setRecs(await api(`/session/${sid}/recommendations`)); } catch { /* optional */ }
       setScreen("partial");
     } else { setSlotIdx(slotIdx + 1); setScreen("slot"); }
   }
-
   async function finish() {
-    try {
-      setRecs(await api(`/session/${sid}/recommendations`));
-      setScreen("recs");
-    } catch { setErr(t("err")); }
+    try { setRecs(await api(`/session/${sid}/recommendations`)); setScreen("recs"); } catch { setErr(t("err")); }
   }
-
   function onMic() {
     micTries.current = 0;
     const onDone = (txt, conf) => {
-      if ((conf || 0) < 0.75 && micTries.current < 1) { // C1: one re-prompt, then accept
-        micTries.current++;
-        setErr(t("speak_slow"));
-        startListen(onDone, lang);
-        return;
-      }
+      if ((conf || 0) < 0.75 && micTries.current < 1) { micTries.current++; setErr(t("speak_slow")); startListen(onDone, lang); return; }
       setErr("");
       setTextVal(txt);
       echo(txt, txt);
     };
     startListen(onDone, lang);
   }
+  async function onContacted() { await api(`/session/${sid}/contacted`, { method: "POST" }).catch(() => {}); setContactedDone(true); }
+  async function onFollowup(result) { await api(`/session/${sid}/followup`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ result }) }).catch(() => {}); setFollowupDone(true); }
 
-  async function onContacted() { // M3: behavioural metric
-    await api(`/session/${sid}/contacted`, { method: "POST" }).catch(() => {});
-    setContactedDone(true);
-  }
-
-  async function onFollowup(result) { // H8: 30-day outcome (simulated IVR question)
-    await api(`/session/${sid}/followup`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ result }),
-    }).catch(() => {});
-    setFollowupDone(true);
-  }
-
-  const recsList = recs && (
-    <>
-      {recs.recommendations.map(r => <RecCard key={r.qp_code} r={r} t={t} />)}
-      {recs.aspiration_override && <RecCard r={recs.aspiration_override} t={t} />}
-    </>
-  );
-
+  // Phone screen
   if (screen === "phone") return (
     <div className="wrap">
       <h1>PM-AJAY</h1>
@@ -203,21 +102,19 @@ export default function Beneficiary() {
       <Card className="mt-3">
         <CardHeader><CardTitle>{t("phone_q")}</CardTitle></CardHeader>
         <CardContent>
-          <Input type="tel" placeholder="98XXXXXXXX" value={phone}
-            onChange={e => setPhone(e.target.value)} />
+          <Input type="tel" placeholder="98XXXXXXXX" value={phone} onChange={e => setPhone(e.target.value)} />
           <Button onClick={startSession}>{d.phone_btn}</Button>
           <label className="flex items-center gap-2 mt-3 text-sm text-muted-foreground cursor-pointer">
-            <input type="checkbox" checked={opMode} onChange={e => setOpMode(e.target.checked)} />
-            {t("op_mode")}
+            <input type="checkbox" checked={opMode} onChange={e => setOpMode(e.target.checked)} />{t("op_mode")}
           </label>
-          {opMode && <Input type="text" placeholder={t("op_id_q")} value={opId}
-            onChange={e => setOpId(e.target.value)} className="mt-2" />}
+          {opMode && <Input type="text" placeholder={t("op_id_q")} value={opId} onChange={e => setOpId(e.target.value)} className="mt-2" />}
           {err && <p className="err text-destructive text-center text-sm mt-3">{err}</p>}
         </CardContent>
       </Card>
     </div>
   );
 
+  // Lang screen (only if no language confirmed yet — C4 profile reuse skips this)
   if (screen === "lang") return (
     <div className="wrap">
       <Card className="mt-3">
@@ -232,6 +129,7 @@ export default function Beneficiary() {
     </div>
   );
 
+  // Consent (only when language selected but consent not yet given)
   if (screen === "consent") return (
     <div className="wrap">
       <Card className="mt-3">
@@ -245,14 +143,14 @@ export default function Beneficiary() {
     </div>
   );
 
+  // Resume screen (C4)
   if (screen === "resume") return (
     <div className="wrap">
       <Card className="mt-3">
         <CardHeader><CardTitle>{t("resume_q")}</CardTitle></CardHeader>
         <CardContent>
           <p className="summary">
-            {Object.entries(confirmed).map(([k, v]) =>
-              d.slot_label[k] ? <div key={k}><b>{d.slot_label[k]}:</b> {dispOf(k, v, lang)}</div> : null)}
+            {Object.entries(confirmed).map(([k, v]) => d.slot_label[k] ? <div key={k}><b>{d.slot_label[k]}:</b> {dispOf(k, v, lang)}</div> : null)}
           </p>
           <Button onClick={() => resumeOk(true)}>{t("resume_ok")}</Button>
           <Button variant="outline" onClick={() => resumeOk(false)}>{t("resume_chg")}</Button>
@@ -261,6 +159,7 @@ export default function Beneficiary() {
     </div>
   );
 
+  // Slot screen (two-call: Call 1 slots 0-2, Call 2 slots 3-6)
   if (screen === "slot") {
     const s = SLOTS[slotIdx];
     const opts = slotOptions(s, d);
@@ -273,13 +172,17 @@ export default function Beneficiary() {
           ))}
         </div>
         <Card>
-          <CardHeader><CardTitle>{s.q[lang]}</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-2xl md:text-3xl leading-snug">{s.q[lang]}</CardTitle></CardHeader>
           <CardContent>
-            {s.type === "choice" && opts.map(([val, label]) => (
-              <Button key={String(val)}
-                variant={val === "self_employment" || s.key === "education_grade" ? "secondary" : "outline"}
-                onClick={() => echo(val, label)}>{label}</Button>
-            ))}
+            {s.type === "choice" && opts && (
+              <div className="grid gap-1 md:grid-cols-2 md:gap-2.5">
+                {opts.map(([val, label]) => (
+                  <Button key={String(val)}
+                    variant={val === "self_employment" || s.key === "education_grade" ? "secondary" : "outline"}
+                    onClick={() => echo(val, label)}>{label}</Button>
+                ))}
+              </div>
+            )}
             {s.type === "yesno" && [["yes", true], ["no", false]].map(([yn, val]) => (
               <Button key={yn} variant="secondary" onClick={() => echo(val, t(yn))}>{t(yn)}</Button>
             ))}
@@ -288,8 +191,7 @@ export default function Beneficiary() {
                 {chips && (
                   <div className="flex flex-wrap gap-2 mt-3">
                     {chips.map(([val, label]) => (
-                      <Button key={val} variant="outline" size="sm"
-                        className="rounded-full w-auto mt-0"
+                      <Button key={val} variant="outline" size="sm" className="rounded-full w-auto mt-0"
                         onClick={() => { setTextVal(val); echo(val, label); }}>{label}</Button>
                     ))}
                   </div>
@@ -297,9 +199,7 @@ export default function Beneficiary() {
                 <Input type="text" value={textVal} placeholder="..."
                   onChange={e => setTextVal(e.target.value)} className="mt-3" />
                 {hasSR() && <Button variant="outline" onClick={onMic}>{lang === "hi" ? "🎤 बोलें" : "🎤 बोला"}</Button>}
-                <Button onClick={() => textVal.trim() ? echo(textVal.trim(), textVal.trim()) : setErr(t("err"))}>
-                  {t("send")}
-                </Button>
+                <Button onClick={() => textVal.trim() ? echo(textVal.trim(), textVal.trim()) : setErr(t("err"))}>{t("send")}</Button>
               </>
             )}
             {err && <p className="err text-destructive text-center text-sm mt-3">{err}</p>}
@@ -309,6 +209,7 @@ export default function Beneficiary() {
     );
   }
 
+  // Confirm echo (re-ask cap: max 1 re-ask per slot)
   if (screen === "echo") return (
     <div className="wrap">
       <Card className="mt-3">
@@ -316,13 +217,13 @@ export default function Beneficiary() {
         <CardContent>
           <div className="echo">{pending && pending.display}</div>
           <Button onClick={() => confirmSlot(true)}>{t("correct")}</Button>
-          {/* F2.1: never ask the same question more than twice — after 1 re-ask, auto-accept */}
           {reAsks < 1 && <Button variant="outline" onClick={() => confirmSlot(false)}>{t("again")}</Button>}
         </CardContent>
       </Card>
     </div>
   );
 
+  // Partial recs screen (after Call 1 — 4 mandatory slots)
   if (screen === "partial") return (
     <div className="wrap">
       <Card className="mt-3">
@@ -341,6 +242,7 @@ export default function Beneficiary() {
     </div>
   );
 
+  // Final recommendations + H8 follow-up + M3 contacted
   if (screen === "recs" && recs) return (
     <div className="wrap">
       <Card>
