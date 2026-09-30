@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { API, api } from "./api";
+import { langName } from "./dialogue";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Badge } from "./components/ui/badge";
@@ -130,7 +131,7 @@ export default function Admin() {
       <div className="grid md:grid-cols-2 gap-3 mt-4">
         <Card><CardHeader><CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Education</CardTitle></CardHeader><CardContent><Bars obj={stats.by_education} labelFn={k => EDU[k] || k} /></CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Interest</CardTitle></CardHeader><CardContent><Bars obj={stats.by_interest} /></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Language split</CardTitle></CardHeader><CardContent><Bars obj={stats.by_language} labelFn={k => k === "mr" ? "मराठी" : "हिंदी"} /></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Language split</CardTitle></CardHeader><CardContent><Bars obj={stats.by_language} labelFn={k => langName(k)} /></CardContent></Card>
         <Card>
           <CardHeader><CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Nodal-officer pins (H3)</CardTitle></CardHeader>
           <CardContent>
@@ -196,6 +197,13 @@ export default function Admin() {
               </TableBody>
             </Table>
           </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-3 mt-4">
+        <Card>
+          <CardHeader><CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Sessions by state (A6, suppressed &lt;20)</CardTitle></CardHeader>
+          <CardContent><Bars obj={stats.by_state || {}} /></CardContent>
         </Card>
       </div>
 

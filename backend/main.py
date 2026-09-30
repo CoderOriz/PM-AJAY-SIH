@@ -14,12 +14,15 @@ from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from seed_addon_a import ensure_addon_a  # Addon A A4.2 reference tables
+
 DB = os.path.join(os.path.dirname(__file__), "pmajay.db")
 RESUME_WINDOW = timedelta(hours=48)  # C4: phone number is the session key, no PIN
 SALT = "pmajay-demo-salt"  # ponytail: fixed demo salt; env-provided secret before real data
 
 app = FastAPI(title="PM-AJAY Voice Livelihood Assistant")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])  # ponytail: wide-open CORS, demo only
+ensure_addon_a()  # Addon A: community registry + language maps (idempotent)
 
 
 @contextmanager
@@ -51,6 +54,10 @@ ALLOWED_SLOTS = {
     "district_lgd", "district_name", "education_grade", "primary_interest",
     "language", "mobility_constraint", "preference", "family_occupation",
     "nearest_market", "consent_given", "assisted_session", "operator_id",
+    # Addon A A4.4 profile schema v2.1 (backward-compatible; community_id stays
+    # OUT — it lives in beneficiary_community via /community, per A4.3)
+    "language_detected", "language_confirmed_by_user", "dialect_tag", "voice_mode",
+    "state_of_residence_lgd", "state_of_origin_lgd", "migrant_flag",
 }
 
 
@@ -280,6 +287,17 @@ def recommendations(session_id: str):
 
 # --- B3.2 admin aggregates. C3: aggregates only — no individual rows, no phone hashes, ever. ---
 
+SUPPRESS_MIN = 20  # A9.3: small-cell suppression default (small communities stay unidentifiable)
+
+
+def _suppress(counts):
+    """A9.3: merge cells below SUPPRESS_MIN upward so small groups never identify."""
+    out = {k: v for k, v in counts.items() if v >= SUPPRESS_MIN}
+    small = sum(v for v in counts.values() if v < SUPPRESS_MIN)
+    if small:
+        out["other_suppressed"] = small
+    return out
+
 SLOT_KEYS = ("district_name", "education_grade", "primary_interest",
              "mobility_constraint", "preference", "family_occupation", "nearest_market")
 RAG_TARGET = 20  # ponytail: demo target/district; real targets from the GIA perspective plan
@@ -312,6 +330,7 @@ def _aggregate(conn):
             "anomalies": sum(1 for s in states if s.get("anomaly_flag")),
             "contacted": sum(1 for s in states if s.get("centre_contacted")),  # M3 behavioural metric
             "by_language": dist("language"), "by_education": dist("education_grade"),
+            "by_state": _suppress(dist("state_of_residence_lgd")),
             "by_interest": dist("primary_interest"), "by_district": dist("district_name"),
             "top_recommended": top, "rag": rag, "centres": centres,
             "outcomes": dict(conn.execute("SELECT result, COUNT(*) c FROM outcomes GROUP BY result").fetchall()),
@@ -447,3 +466,65 @@ def unpin(district_lgd: str, qp_code: str):
     with db() as conn:
         conn.execute("DELETE FROM pinned_courses WHERE district_lgd=? AND qp_code=?", (district_lgd, qp_code))
         return {"ok": True}
+
+
+# --- Addon A endpoints: language registry, greeting sets, community consent ---
+
+class CommunityIn(BaseModel):
+    community_id: str | None = None
+    skip: bool = False
+    consent_ref: str | None = None
+    purpose: str | None = None
+
+
+@app.post("/session/{session_id}/community")
+def record_community(session_id: str, body: CommunityIn):
+    """A4.3: optional, separately-consented community field. Skips never block;
+    answers are validated against the registry and stored apart (own table)."""
+    now = datetime.now(timezone.utc).isoformat()
+    with db() as conn:
+        row = conn.execute("SELECT phone_hash, state_json FROM sessions WHERE id=?", (session_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "session not found")
+        state = json.loads(row["state_json"] or "{}")
+        if body.skip or not body.community_id:
+            state["community_skipped"] = True  # A9.4 skip-rate KPI source (aggregate only)
+            conn.execute("UPDATE sessions SET state_json=?, updated_at=? WHERE id=?",
+                         (json.dumps(state), now, session_id))
+            return {"ok": True, "skipped": True}
+        if not body.consent_ref:
+            raise HTTPException(400, "community answer requires a separate consent_ref (A4.3)")
+        reg = conn.execute("SELECT community_id FROM sc_community_registry WHERE community_id=? AND active=1",
+                           (body.community_id,)).fetchone()
+        if not reg:
+            raise HTTPException(404, "community not in registry")
+        conn.execute("INSERT OR REPLACE INTO beneficiary_community VALUES (?,?,?,?,?)",
+                     (row["phone_hash"], body.community_id, now, body.consent_ref, body.purpose))
+        return {"ok": True, "skipped": False}
+
+
+@app.get("/languages")
+def list_languages():
+    """Addon A A3.1/A4.2: full language-tier registry for pickers and routing."""
+    with db() as conn:
+        return {"languages": [dict(r) for r in
+                conn.execute("SELECT * FROM state_language_map ORDER BY state_code, language_code")]}
+
+
+@app.get("/districts/{lgd}/languages")
+def district_languages(lgd: str):
+    """Addon A A3.4: configurable greeting set per district (top shares + Hindi)."""
+    with db() as conn:
+        codes = [r["language_code"] for r in conn.execute(
+            "SELECT language_code FROM district_language_mix WHERE lgd_district_code=? ORDER BY census_share DESC",
+            (lgd,))]
+        if "hi" not in codes:
+            codes.append("hi")
+        modes = {}
+        for c in codes:
+            m = conn.execute(
+                "SELECT voice_mode FROM state_language_map WHERE language_code=? "
+                "ORDER BY CASE voice_mode WHEN 'voice_first' THEN 0 WHEN 'dtmf_first' THEN 1 ELSE 2 END LIMIT 1",
+                (c,)).fetchone()
+            modes[c] = m["voice_mode"] if m else "human_assisted"
+        return {"lgd": lgd, "languages": codes, "voice_modes": modes}

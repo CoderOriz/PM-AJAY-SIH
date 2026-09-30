@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { D, DATA, DISTRICTS, SLOTS, slotOptions, slotChips, dispOf } from "./dialogue";
-import { api, saveSlots } from "./api";
+import { D, DATA, DISTRICTS, SLOTS, VOICE_LANGS, slotOptions, slotChips, dispOf } from "./dialogue";
+import { api } from "./api";
 import { speak, startListen, hasSR, preloadVoices } from "./voice";
 import { RecCard } from "./components/Beneficiary/RecCard";
 import { Button, Badge, Card, CardContent, CardHeader, CardTitle, Input } from "./components/ui";
 
-const GAP_VARIANT = { zero: "success", partial: "warning", major: "destructive" };
 
 export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
   const [screen, setScreen] = useState("phone");
@@ -26,6 +25,9 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
 
   const t = k => D[lang][k];
   const d = DATA[lang];
+  const recsList = recs && Array.isArray(recs.recommendations)
+    ? recs.recommendations.map((r, i) => <RecCard key={i} r={r} t={t} />)
+    : null;
 
   useEffect(() => { preloadVoices(); }, []);
   useEffect(() => {
@@ -35,6 +37,24 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
     else if (screen === "partial") speak(t("partial_title") + ". " + t("partial_note"), lang);
     else if (screen === "recs") speak(t("recs_title"), lang);
   }, [screen, slotIdx, lang]);
+
+  // Inactivity re-prompt (7-8s): repeat the question on slot screens, or the
+  // given answer on the echo screen. Typing, errors, and navigation restart
+  // the window; capped at 2 repeats per idle stretch so it never nags forever.
+  useEffect(() => {
+    if (screen !== "slot" && screen !== "echo") return;
+    let alive = true;
+    let repeats = 0;
+    let timer = 0;
+    const reprompt = () => {
+      if (!alive) return;
+      if (screen === "slot") speak(SLOTS[slotIdx].q[lang], lang);
+      else if (pending) speak(t("said") + " " + pending.display, lang);
+      if (++repeats < 2) timer = setTimeout(reprompt, 7500);
+    };
+    timer = setTimeout(reprompt, 7500);
+    return () => { alive = false; clearTimeout(timer); };
+  }, [screen, slotIdx, lang, textVal, err, pending]);
 
   async function startSession() {
     setErr("");
@@ -108,6 +128,7 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
             <input type="checkbox" checked={opMode} onChange={e => setOpMode(e.target.checked)} />{t("op_mode")}
           </label>
           {opMode && <Input type="text" placeholder={t("op_id_q")} value={opId} onChange={e => setOpId(e.target.value)} className="mt-2" />}
+          {opMode && <div className="mt-2 text-center"><Badge variant="secondary">{t("assisted_badge")}{opId ? ` — #${opId}` : ""}</Badge></div>}
           {err && <p className="err text-destructive text-center text-sm mt-3">{err}</p>}
         </CardContent>
       </Card>
@@ -122,8 +143,10 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
           <CardTitle>तुम्ही कोणत्या भाषेत बोलू इच्छिता?<br />आप किस भाषा में बात करना चाहेंगे?</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button onClick={() => pickLang("mr")}>मराठी</Button>
-          <Button variant="outline" onClick={() => pickLang("hi")}>हिंदी</Button>
+          {VOICE_LANGS.map(l => (
+            <Button key={l.code} variant={l.code === "mr" ? undefined : "outline"}
+              onClick={() => pickLang(l.code)}>{l.name}</Button>
+          ))}
         </CardContent>
       </Card>
     </div>
@@ -138,6 +161,9 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
           <Button onClick={consent}>{t("consent_btn")}</Button>
           <Button variant="ghost" onClick={() => setNoticeOpen(!noticeOpen)}>{t("consent_more")}</Button>
           {noticeOpen && <p className="notice">{t("notice")}</p>}
+          <div className="flex flex-wrap gap-2 mt-3 justify-center">
+            {[t("priv_1"), t("priv_2"), t("priv_3")].map(p => <Badge key={p} variant="outline">{p}</Badge>)}
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -233,6 +259,13 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
         </CardHeader>
         <CardContent>
           {recsList}
+          {recs && recs.aspiration_override && (
+            <div className="mt-3">
+              <Badge variant="secondary">{t("asp_badge")}</Badge>
+              <p className="text-sm text-muted-foreground mt-1 mb-2">{t("override_note")}</p>
+              <RecCard r={recs.aspiration_override} t={t} />
+            </div>
+          )}
           <Button onClick={() => { setSlotIdx(SLOTS.findIndex(s => s.call === 2)); setScreen("slot"); }}>
             {t("continue_call2")}
           </Button>
@@ -249,6 +282,13 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
         <CardHeader><CardTitle>{t("recs_title")}</CardTitle></CardHeader>
         <CardContent>
           {recsList}
+          {recs && recs.aspiration_override && (
+            <div className="mt-3">
+              <Badge variant="secondary">{t("asp_badge")}</Badge>
+              <p className="text-sm text-muted-foreground mt-1 mb-2">{t("override_note")}</p>
+              <RecCard r={recs.aspiration_override} t={t} />
+            </div>
+          )}
           <div className="flex flex-col gap-1 mt-5">
             {!contactedDone
               ? <Button variant="secondary" onClick={onContacted}>{t("contacted")}</Button>

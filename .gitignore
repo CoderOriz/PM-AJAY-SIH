@@ -5,3 +5,6 @@ __pycache__/
 pmajay.db
 node_modules/
 dist/
+remotion
+*.md
+

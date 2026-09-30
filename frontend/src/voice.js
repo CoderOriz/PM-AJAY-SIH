@@ -1,4 +1,6 @@
 // Day 3 voice layer: TTS read-back + mic with confidence gate (C1: <0.75 re-prompts once).
+// Addon A: generic BCP-47 tags per language; no hard-coded language list.
+import { speechTag } from "./dialogue";
 
 // Chrome loads voices ASYNC — getVoices() is empty until voiceschanged fires. Preload + cache.
 let cachedVoices = [];
@@ -11,16 +13,17 @@ export function preloadVoices() {
 }
 
 function bestVoice(lang) {
-  // Fallback chain: exact -> prefix -> any Indic voice.
-  // Hindi voices render Marathi fine (same Devanagari script) — cross-fallback matters when
-  // the OS has no Marathi voice installed.
-  const code = lang === "mr" ? "mr" : "hi";
+  // Fallback chain: exact BCP-47 -> bare code -> prefix -> any Indic voice.
+  // Cross-script fallback matters when the OS lacks a voice for the language
+  // (e.g. Hindi voices render Marathi fine — same Devanagari script).
+  const tag = speechTag(lang);
+  const code = tag.split("-")[0];
+  const indic = /^(hi|mr|bn|ta|te|gu|kn|ml|or|pa|as|ur|mai|sat|kok|doi|ne|sd|brx)/i;
   return (
-    cachedVoices.find(v => v.lang === code + "-IN") ||
+    cachedVoices.find(v => v.lang === tag) ||
     cachedVoices.find(v => v.lang === code) ||
     cachedVoices.find(v => v.lang.startsWith(code)) ||
-    cachedVoices.find(v => /^(hi|mr)-IN?$/i.test(v.lang)) ||
-    cachedVoices.find(v => /^(hi|mr)/i.test(v.lang)) ||
+    cachedVoices.find(v => indic.test(v.lang)) ||
     null
   );
 }
@@ -33,7 +36,7 @@ export function speak(txt, lang) {
     const u = new SpeechSynthesisUtterance(txt);
     const v = bestVoice(lang);
     if (v) u.voice = v;
-    u.lang = v ? v.lang : (lang === "mr" ? "mr-IN" : "hi-IN");
+    u.lang = v ? v.lang : speechTag(lang);
     u.rate = 0.9;
     synth.speak(u);
   } catch (e) { /* silent — input fallbacks still work */ }
@@ -47,7 +50,7 @@ export function startListen(onDone, lang) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return;
   const rec = new SR();
-  rec.lang = lang === "mr" ? "mr-IN" : "hi-IN";
+  rec.lang = speechTag(lang);
   rec.onresult = e => onDone(e.results[0][0].transcript, e.results[0][0].confidence);
   rec.onerror = () => { /* input remains as fallback */ };
   rec.start();

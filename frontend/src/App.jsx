@@ -5,6 +5,8 @@ import { Button } from "./components/ui/button";
 
 export default function App() {
   const [view, setView] = useState(location.hash === "#admin" ? "admin" : "beneficiary");
+  const [opMode, setOpMode] = useState(false);
+  const [opId, setOpId] = useState("");
   const switchView = () => {
     const v = view === "admin" ? "beneficiary" : "admin";
     location.hash = v === "admin" ? "#admin" : "";
@@ -26,7 +28,7 @@ export default function App() {
           </Button>
         </div>
       </header>
-      {view === "admin" ? <Admin /> : <Beneficiary />}
+      {view === "admin" ? <Admin /> : <Beneficiary opMode={opMode} opId={opId} setOpMode={setOpMode} setOpId={setOpId} />}
     </div>
   );
 }

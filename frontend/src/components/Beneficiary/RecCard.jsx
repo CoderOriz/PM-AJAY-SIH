@@ -1,13 +1,15 @@
-import { D, DATA, DISTRICTS, SLOTS, slotOptions, slotChips, dispOf } from "../../dialogue";
-import { api, saveSlots } from "../../api";
-import { Button, Badge, Card, CardContent, CardHeader, CardTitle, Input } from "../ui";
+import { QRCode } from "react-qr-code";
+import { Badge, Card, CardContent } from "../ui";
 
 const GAP_VARIANT = { zero: "success", partial: "warning", major: "destructive" };
 
 export function RecCard({ r, t }) {
+  const qrValue = r.centre && r.centre.phone ? `tel:${r.centre.phone.replace(/\s/g, "")}` : null;
   return (
     <Card className="rec">
       <CardContent className="pt-2">
+        <div className="flex gap-3 items-start">
+          <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           {r.pinned && <Badge>{t("pinned_badge")}</Badge>}
           {r.rpl && <Badge variant="secondary">{t("rpl_badge")}</Badge>}
@@ -27,6 +29,14 @@ export function RecCard({ r, t }) {
             </div>
           )}
           {r.dropout_risk === "high" && <div className="mt-1.5 text-destructive font-medium">{t("dropout_warn")}</div>}
+        </div>
+          </div>
+          {qrValue && (
+            <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
+              <QRCode value={qrValue} size={64} />
+              <span className="text-[11px] text-muted-foreground text-center leading-tight">{t("qr_call")}</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
