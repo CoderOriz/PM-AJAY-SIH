@@ -16,9 +16,11 @@ from pydantic import BaseModel
 
 from seed_addon_a import ensure_addon_a  # Addon A A4.2 reference tables
 
-DB = os.path.join(os.path.dirname(__file__), "pmajay.db")
+DB = os.path.join(os.path.dirname(__file__), os.environ.get("PM_AJAY_DB", "pmajay.db"))
 RESUME_WINDOW = timedelta(hours=48)  # C4: phone number is the session key, no PIN
-SALT = "pmajay-demo-salt"  # ponytail: fixed demo salt; env-provided secret before real data
+# ponytail: fixed demo salt; env-provided secret before real data (.env.example).
+# Changing PM_AJAY_SALT invalidates every stored session's phone_hash.
+SALT = os.environ.get("PM_AJAY_SALT") or "pmajay-demo-salt"
 
 app = FastAPI(title="PM-AJAY Voice Livelihood Assistant")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])  # ponytail: wide-open CORS, demo only

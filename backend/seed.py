@@ -5,7 +5,7 @@ import random
 import sqlite3
 from datetime import date, timedelta
 
-DB = os.path.join(os.path.dirname(__file__), "pmajay.db")
+DB = os.path.join(os.path.dirname(__file__), os.environ.get("PM_AJAY_DB", "pmajay.db"))
 
 # (SSC code prefix, sector name, [(QP title, NSQF level, min education), ...])
 SECTORS = [
