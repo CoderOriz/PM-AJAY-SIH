@@ -10,11 +10,12 @@ from collections import Counter
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from seed_addon_a import ensure_addon_a  # Addon A A4.2 reference tables
+import auth  # Q3/RBAC: PBKDF2 passwords + HS256 JWT (stdlib only, no pyjwt)
 
 DB = os.path.join(os.path.dirname(__file__), os.environ.get("PM_AJAY_DB", "pmajay.db"))
 RESUME_WINDOW = timedelta(hours=48)  # C4: phone number is the session key, no PIN
@@ -36,6 +37,26 @@ def db():
         conn.commit()
     finally:
         conn.close()
+
+
+# Q3/RBAC: demo admin users, idempotent — existing DBs gain them at startup
+# without re-seeding. Roles cover all of SPEC s15.
+DEMO_PASSWORD = "sathi-demo"  # demo only — documented in AGENTS.md
+DEMO_USERS = [("officer", "district_officer"), ("planner", "state_planner"), ("ministry", "ministry"),
+              ("coordinator", "coordinator"), ("operator1", "operator"), ("supervisor", "supervisor"),
+              ("ops", "ops")]
+
+
+def ensure_admin_users():
+    with db() as conn:
+        conn.execute("CREATE TABLE IF NOT EXISTS users "
+                     "(username TEXT PRIMARY KEY, role TEXT, password_hash TEXT)")
+        for username, role in DEMO_USERS:
+            conn.execute("INSERT OR REPLACE INTO users VALUES (?,?,?)",
+                         (username, role, auth.hash_password(DEMO_PASSWORD)))
+
+
+ensure_admin_users()
 
 
 def phone_hash(phone: str) -> str:
@@ -287,6 +308,43 @@ def recommendations(session_id: str):
         return out
 
 
+# --- B3.1 admin auth (Q3): JWT + RBAC per SPEC s15. Roles -> endpoint allow-lists. ---
+ADMIN_VIEW_ROLES = {"district_officer", "state_planner", "ministry", "coordinator", "supervisor", "ops"}
+CENTRE_STATUS_ROLES = {"operator", "coordinator", "ops"}
+PIN_ROLES = {"district_officer", "ops"}
+OPERATOR_MANAGE_ROLES = {"supervisor", "ops"}
+EXPORT_ROLES = {"ministry", "state_planner", "ops"}
+
+
+class LoginIn(BaseModel):
+    username: str
+    password: str
+
+
+@app.post("/admin/login")
+def login(body: LoginIn):
+    """Q3/RBAC: demo sign-in — 8h JWT bound to the user's role."""
+    with db() as conn:
+        row = conn.execute("SELECT role, password_hash FROM users WHERE username=?",
+                           (body.username,)).fetchone()
+    if not row or not auth.verify_password(body.password, row["password_hash"]):
+        raise HTTPException(401, "unknown user or wrong password")
+    return {"token": auth.make_token(body.username, row["role"]),
+            "role": row["role"], "username": body.username}
+
+
+def require_role(*allowed):
+    """FastAPI dependency: valid Bearer JWT + role in the allow-list, else 401/403."""
+    def dep(authorization: str = Header(default="")):
+        payload = auth.verify_token(authorization.removeprefix("Bearer ").strip())
+        if not payload:
+            raise HTTPException(401, "missing or invalid admin token")
+        if payload.get("role") not in allowed:
+            raise HTTPException(403, f"role '{payload['role']}' is not permitted here")
+        return payload
+    return dep
+
+
 # --- B3.2 admin aggregates. C3: aggregates only — no individual rows, no phone hashes, ever. ---
 
 SUPPRESS_MIN = 20  # A9.3: small-cell suppression default (small communities stay unidentifiable)
@@ -342,14 +400,14 @@ def _aggregate(conn):
 
 
 @app.get("/admin/stats")
-def admin_stats():
-    """B3.2 dashboard feed. ponytail: no auth for demo; RBAC per B3.1 before pilot."""
+def admin_stats(user=Depends(require_role(*ADMIN_VIEW_ROLES))):
+    """B3.2 dashboard feed. Q3: JWT + RBAC (admin view roles)."""
     with db() as conn:
         return _aggregate(conn)
 
 
 @app.get("/admin/export.csv")
-def admin_export():
+def admin_export(user=Depends(require_role(*EXPORT_ROLES))):
     """Ministry export (CSV). PDF skipped: CSV opens in any spreadsheet tool."""
     with db() as conn:
         a = _aggregate(conn)
@@ -361,7 +419,7 @@ def admin_export():
 
 
 @app.get("/admin/centres")
-def admin_centres():
+def admin_centres(user=Depends(require_role(*ADMIN_VIEW_ROLES))):
     """C6: centre list for the dashboard's ground-truth flagging UI. Centres are public
     infrastructure data, not beneficiary PII — C3's aggregate rule doesn't apply here."""
     with db() as conn:
@@ -374,9 +432,8 @@ class CentreStatusIn(BaseModel):
 
 
 @app.post("/admin/centre/{centre_id}/status")
-def centre_status(centre_id: int, body: CentreStatusIn):
-    """C6 ground-truth: operator marks a centre unresponsive after a failed beneficiary visit.
-    ponytail: no auth/operator ID for demo; certification gate per I1.2 before pilot."""
+def centre_status(centre_id: int, body: CentreStatusIn, user=Depends(require_role(*CENTRE_STATUS_ROLES))):
+    """C6 ground-truth: operator/coordinator marks a centre unresponsive after a failed visit."""
     if body.status not in ("active", "unresponsive", "closed"):
         raise HTTPException(400, "invalid status")
     with db() as conn:
@@ -423,7 +480,7 @@ class OperatorIn(BaseModel):
 
 
 @app.get("/admin/operators")
-def admin_operators():
+def admin_operators(user=Depends(require_role(*ADMIN_VIEW_ROLES))):
     """H6: operator list with certification status."""
     with db() as conn:
         rows = conn.execute("SELECT id, name, certified FROM operators ORDER BY id").fetchall()
@@ -431,14 +488,14 @@ def admin_operators():
 
 
 @app.post("/admin/operator")
-def add_operator(body: OperatorIn):
+def add_operator(body: OperatorIn, user=Depends(require_role(*OPERATOR_MANAGE_ROLES))):
     with db() as conn:
         cur = conn.execute("INSERT INTO operators (name, certified) VALUES (?,0)", (body.name,))
         return {"operator_id": cur.lastrowid, "name": body.name, "certified": False}
 
 
 @app.post("/admin/operator/{op_id}/certify")
-def certify_operator(op_id: int):
+def certify_operator(op_id: int, user=Depends(require_role(*OPERATOR_MANAGE_ROLES))):
     """H6: certification gate — quiz pass (>=80%) marks the operator certified."""
     with db() as conn:
         cur = conn.execute("UPDATE operators SET certified=1 WHERE id=?", (op_id,))
@@ -453,7 +510,7 @@ class PinIn(BaseModel):
 
 
 @app.post("/admin/pin")
-def pin(body: PinIn):
+def pin(body: PinIn, user=Depends(require_role(*PIN_ROLES))):
     """H3: nodal officer pins locally relevant courses; shown with district-office label."""
     with db() as conn:
         if not conn.execute("SELECT 1 FROM qps WHERE code=?", (body.qp_code,)).fetchone():
@@ -464,7 +521,7 @@ def pin(body: PinIn):
 
 
 @app.delete("/admin/pin")
-def unpin(district_lgd: str, qp_code: str):
+def unpin(district_lgd: str, qp_code: str, user=Depends(require_role(*PIN_ROLES))):
     with db() as conn:
         conn.execute("DELETE FROM pinned_courses WHERE district_lgd=? AND qp_code=?", (district_lgd, qp_code))
         return {"ok": True}

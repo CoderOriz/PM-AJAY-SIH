@@ -28,3 +28,9 @@ ADR-style records for decisions that depart from `SPEC.md`/`tasks.yaml`. Newest 
 - **Why:** honours the `ponytail:` note ("env-provided secret before real data") without new dependencies.
 - **Caveat:** changing `PM_AJAY_SALT` invalidates every stored session's `phone_hash` — existing sessions stop resuming.
 - **Status:** accepted (2026-10-02)
+
+## D6 — Admin RBAC: stdlib HS256 JWT + PBKDF2, demo users ensured at startup
+- **Decision:** all `/admin/*` routes require a Bearer JWT (`backend/auth.py` — stdlib HS256, no pyjwt dependency) whose role matches an endpoint-specific allow-list (SPEC s15 roles); demo users (all 7 roles, password `sathi-demo`) are ensured idempotently at startup in `main.py`; `PM_AJAY_JWT_SECRET` env overrides the demo secret (`.env.example`).
+- **Why:** resolves QUESTIONS Q3 (SPEC s15: JWT + RBAC) without new dependencies.
+- **Pilot swap:** pyjwt/OAuth IdP + a real user store; the beneficiary flow stays session-keyed without auth.
+- **Status:** accepted (2026-10-02)

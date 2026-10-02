@@ -7,15 +7,18 @@ Open questions. Format: context, options, recommended default, what happens mean
 - **Options:** (a) after SIH, before pilot prep; (b) only when multi-user load demands it.
 - **Recommended default:** (a) — pilot data should not live in a demo-grade DB.
 - **Meanwhile:** nothing blocks; the schema is small enough to migrate with a script.
+- **Resolved (2026-10-02):** default (a) stands — deferred until after SIH. Docker/Postgres are not installed on the dev machine, so a migration could not be verified yet.
 
 ## Q2 — Reference data is synthetic: when does real data land?
 - **Context:** `seed.py` QP codes (`AMH/Q0001`-style), centre phones (`020-27xxxxxx`), and coordinator phones (crc32-derived) are generated, not verified against NCVET/LGD/SSC registries.
 - **Options:** import real NCVET QP data + a phone-verified centre list (HUMAN_TASKS HT-06/07), or keep synthetic for the demo.
 - **Recommended default:** keep synthetic until the pilot; the real import is a human-gated task.
 - **Meanwhile:** the recommender stays advisory-only, so synthetic QP codes carry no eligibility consequence.
+- **Blocked-by-human (2026-10-02):** needs the NCVET/LGD/centre files (HUMAN_TASKS HT-06/07); stays synthetic until they land.
 
 ## Q3 — Admin endpoints have no auth — when is RBAC added?
 - **Context:** `/admin/*` is open (`ponytail:` demo only); SPEC s15 pins JWT + RBAC roles.
 - **Options:** add before any non-local deployment; keep open for the local demo.
 - **Recommended default:** add JWT + RBAC before the first deployment anywhere.
 - **Meanwhile:** never expose the demo backend beyond localhost.
+- **Resolved (2026-10-02):** implemented ahead of schedule — JWT + RBAC on all `/admin/*` routes (DECISIONS D6); demo users seeded, password `sathi-demo`. The beneficiary flow remains session-keyed without auth.

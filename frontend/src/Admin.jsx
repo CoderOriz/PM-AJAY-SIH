@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { API, api } from "./api";
+import { API, api, login, logout } from "./api";
 import { langName } from "./dialogue";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
@@ -24,55 +24,120 @@ function Bars({ obj, labelFn }) {
 }
 
 export default function Admin() {
+  const [user, setUser] = useState(() => sessionStorage.getItem("admin_user")); // Q3/RBAC
   const [stats, setStats] = useState(null);
   const [centres, setCentres] = useState([]);
   const [operators, setOperators] = useState([]);
   const [opName, setOpName] = useState("");
   const [pinCode, setPinCode] = useState("");
+  const [loginUser, setLoginUser] = useState("");
+  const [loginPass, setLoginPass] = useState("");
+  const [loginError, setLoginError] = useState("");
+
+  function doLogout() {
+    logout();
+    setUser(null);
+    setStats(null);
+  }
 
   async function load() {
-    setStats(await api("/admin/stats"));
-    setCentres((await api("/admin/centres")).centres);
-    setOperators((await api("/admin/operators")).operators);
+    try {
+      setStats(await api("/admin/stats"));
+      setCentres((await api("/admin/centres")).centres);
+      setOperators((await api("/admin/operators")).operators);
+    } catch (e) {
+      if (e.message === "401") doLogout(); // expired/invalid token → back to sign-in
+    }
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { if (user) load(); }, [user]);
 
-  async function flag(id, status) { // C6 ground-truth loop
-    await api(`/admin/centre/${id}/status`, {
+  async function act(fn) { // shared admin action: 401 → sign-in; other errors stay silent (e.g. 404 bad QP code)
+    try {
+      await fn();
+    } catch (e) {
+      if (e.message === "401") { doLogout(); return; }
+    }
+    load();
+  }
+
+  async function doLogin() { // Q3/RBAC
+    setLoginError("");
+    try {
+      const data = await login(loginUser.trim(), loginPass);
+      setUser(data.username);
+      setLoginPass("");
+    } catch {
+      setLoginError("Unknown user or wrong password");
+    }
+  }
+
+  async function downloadCsv() { // Q3/RBAC: <a href> can't carry the JWT — fetch + Blob download
+    try {
+      const r = await fetch(API + "/admin/export.csv", {
+        headers: { Authorization: `Bearer ${sessionStorage.getItem("admin_token")}` },
+      });
+      if (!r.ok) return;
+      const blob = await r.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "pmajay-export.csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {}
+  }
+
+  if (!user) {
+    return (
+      <div className="mx-auto w-full max-w-sm px-4 py-16">
+        <Card>
+          <CardHeader><CardTitle>Admin sign-in</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid gap-3">
+              <Input type="text" placeholder="Username (e.g. ops)" value={loginUser} onChange={e => setLoginUser(e.target.value)} />
+              <Input type="password" placeholder="Password" value={loginPass}
+                     onChange={e => setLoginPass(e.target.value)}
+                     onKeyDown={e => e.key === "Enter" && doLogin()} />
+              {loginError && <p className="text-sm text-destructive">{loginError}</p>}
+              <Button onClick={doLogin}>Sign in</Button>
+              <p className="text-xs text-muted-foreground">Demo logins: ops · officer · planner · ministry · coordinator · operator1 · supervisor — password sathi-demo</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  function flag(id, status) { // C6 ground-truth loop
+    act(() => api(`/admin/centre/${id}/status`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
-    });
-    load();
+    }));
   }
 
-  async function addOperator() { // H6
+  function addOperator() { // H6
     if (!opName.trim()) return;
-    await api("/admin/operator", {
+    act(() => api("/admin/operator", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: opName.trim() }),
-    });
+    }));
     setOpName("");
-    load();
   }
 
-  async function certify(id) { // H6: quiz pass marks certified
-    await api(`/admin/operator/${id}/certify`, { method: "POST" });
-    load();
+  function certify(id) { // H6: quiz pass marks certified
+    act(() => api(`/admin/operator/${id}/certify`, { method: "POST" }));
   }
 
-  async function pin() { // H3: nodal officer pins a locally relevant course
+  function pin() { // H3: nodal officer pins a locally relevant course
     if (!pinCode.trim()) return;
-    await api("/admin/pin", {
+    act(() => api("/admin/pin", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ district_lgd: "523", qp_code: pinCode.trim() }),
-    }).catch(() => {});
+    }));
     setPinCode("");
-    load();
   }
 
-  async function unpin(code) {
-    await api(`/admin/pin?district_lgd=523&qp_code=${encodeURIComponent(code)}`, { method: "DELETE" });
-    load();
+  function unpin(code) {
+    act(() => api(`/admin/pin?district_lgd=523&qp_code=${encodeURIComponent(code)}`, { method: "DELETE" }));
   }
 
   if (!stats) return <p style={{ textAlign: "center", marginTop: 40 }}>Loading…</p>;
@@ -207,8 +272,8 @@ export default function Admin() {
         </Card>
       </div>
 
-      <a className="btn inline-block mt-5 px-4 py-2.5 rounded-xl bg-secondary text-white font-semibold no-underline" href={API + "/admin/export.csv"}>Ministry export (CSV)</a>
-      <p className="note text-xs text-muted-foreground mt-4">Aggregate-only view — individual records require supervisor-approved audit-log access (C3). Demo: no admin auth (RBAC per B3.1 before pilot).</p>
+      <button className="btn inline-block mt-5 px-4 py-2.5 rounded-xl bg-secondary text-white font-semibold no-underline cursor-pointer" onClick={downloadCsv}>Ministry export (CSV)</button>
+      <p className="note text-xs text-muted-foreground mt-4">Aggregate-only view — individual records require supervisor-approved audit-log access (C3). Admin routes are JWT + RBAC gated (Q3) — signed in as {user}.</p>
     </div>
   );
 }

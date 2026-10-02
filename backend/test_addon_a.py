@@ -7,16 +7,39 @@ import urllib.error
 BASE = "http://localhost:8000"
 
 
+AUTH = {"Content-Type": "application/json"}  # gains the admin token after login (Q3/RBAC)
+
+
 def post(path, body):
     req = urllib.request.Request(BASE + path, data=json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json"})
+                                 headers=AUTH)
     with urllib.request.urlopen(req) as r:
         return json.load(r)
 
 
 def get(path):
-    with urllib.request.urlopen(BASE + path) as r:
+    req = urllib.request.Request(BASE + path, headers=AUTH)
+    with urllib.request.urlopen(req) as r:
         return json.load(r)
+
+
+# Q3/RBAC: admin routes are JWT-gated — sign in (ops = full access) and carry the token
+_login = urllib.request.Request(BASE + "/admin/login", data=json.dumps(
+    {"username": "ops", "password": "sathi-demo"}).encode(), headers=AUTH)
+with urllib.request.urlopen(_login) as _r:
+    AUTH["Authorization"] = f"Bearer {json.load(_r)['token']}"
+
+# RBAC gating: no token -> 401, operator role -> 403 (ops allowed above)
+for _headers, _expected in (
+        (dict(), 401),
+        ({"Authorization": "Bearer " + post("/admin/login", {"username": "operator1", "password": "sathi-demo"})["token"]}, 403)):
+    _req = urllib.request.Request(BASE + "/admin/stats", headers=_headers)
+    try:
+        urllib.request.urlopen(_req)
+        raise AssertionError(f"expected {_expected}, succeeded")
+    except urllib.error.HTTPError as _e:
+        assert _e.code == _expected, f"expected {_expected}, got {_e.code}"
+print("RBAC OK: no-token 401 / operator 403 / ops allowed")
 
 
 def post_expect(path, body, status):
