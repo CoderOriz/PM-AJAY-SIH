@@ -636,7 +636,6 @@ export const D = {
 
 export const DATA = {
   mr: {
-    sub: "उपजीविका सहाय्यक",
     phone_btn: "पुढे जा",
     phone_err: "10 अंकी नंबर टाका",
     edu: [[0, "कधी शिकले नाही"], [5, "5वी"], [8, "8वी"], [10, "10वी"], [12, "12वी"], [15, "पदवी"]],
@@ -646,7 +645,6 @@ export const DATA = {
     slot_label: { district_name: "जिल्हा", education_grade: "शिक्षण", primary_interest: "आवड", mobility_constraint: "अडचण", preference: "व्यवसाय/नोकरी", family_occupation: "घरचे काम", nearest_market: "जवळचे बाजार", language: "भाषा" },
   },
   hi: {
-    sub: "आजीविका सहायक",
     phone_btn: "आगे बढ़ें",
     phone_err: "10 अंकों का नंबर डालें",
     edu: [[0, "कभी नहीं पढ़ा"], [5, "5वीं"], [8, "8वीं"], [10, "10वीं"], [12, "12वीं"], [15, "स्नातक"]],
@@ -656,7 +654,6 @@ export const DATA = {
     slot_label: { district_name: "जिला", education_grade: "शिक्षा", primary_interest: "रुचि", mobility_constraint: "दिक्कत", preference: "व्यवसाय/नौकरी", family_occupation: "घर का काम", nearest_market: "पास का बाज़ार", language: "भाषा" },
   },
   bn: {
-    sub: "জীবিকা সহায়ক",
     phone_btn: "এগিয়ে যান",
     phone_err: "10 সংখ্যার নম্বর দিন",
     edu: [[0, "কখনও পড়িনি"], [5, "5ম"], [8, "8ম"], [10, "10ম"], [12, "12শ"], [15, "স্নাতক"]],
@@ -666,7 +663,6 @@ export const DATA = {
     slot_label: { district_name: "জেলা", education_grade: "শিক্ষা", primary_interest: "পছন্দ", mobility_constraint: "অসুবিধা", preference: "ব্যবসা/চাকরি", family_occupation: "বাড়ির কাজ", nearest_market: "কাছের বাজার", language: "ভাষা" },
   },
   ta: {
-    sub: "வாழ்வாதார உதவியாளர்",
     phone_btn: "தொடர்க",
     phone_err: "10 இலக்க எண்ணை உள்ளிடுக",
     edu: [[0, "படிக்கவே இல்லை"], [5, "5ஆம்"], [8, "8ஆம்"], [10, "10ஆம்"], [12, "12ஆம்"], [15, "பட்டம்"]],
@@ -676,7 +672,6 @@ export const DATA = {
     slot_label: { district_name: "மாவட்டம்", education_grade: "கல்வி", primary_interest: "விருப்பம்", mobility_constraint: "சிரமம்", preference: "தொழில்/வேலை", family_occupation: "வீட்டுத் தொழில்", nearest_market: "அருகுச் சந்தை", language: "மொழி" },
   },
   te: {
-    sub: "జీవనోపాధి సహాయకుడు",
     phone_btn: "ముందుకు",
     phone_err: "10 అంకెల నంబర్ ఇవ్వండి",
     edu: [[0, "ఎప్పుడూ చదవలేదు"], [5, "5వ"], [8, "8వ"], [10, "10వ"], [12, "12వ"], [15, "డిగ్రీ"]],
@@ -686,7 +681,6 @@ export const DATA = {
     slot_label: { district_name: "జిల్లా", education_grade: "విద్య", primary_interest: "అభిరుచి", mobility_constraint: "ఇబ్బంది", preference: "వ్యాపారం/ఉద్యోగం", family_occupation: "ఇంటి పని", nearest_market: "దగ్గరి మార్కెట్", language: "భాష" },
   },
   gu: {
-    sub: "આજીવિકા સહાયક",
     phone_btn: "આગળ વધો",
     phone_err: "10 અંકનો નંબર નાખો",
     edu: [[0, "ક્યારેય ભણ્યા નથી"], [5, "5મું"], [8, "8મું"], [10, "10મું"], [12, "12મું"], [15, "પદવી"]],
@@ -696,7 +690,6 @@ export const DATA = {
     slot_label: { district_name: "જિલ્લો", education_grade: "શિક્ષણ", primary_interest: "રુચિ", mobility_constraint: "તકલીફ", preference: "ધંધો/નોકરી", family_occupation: "ઘરનું કામ", nearest_market: "નજીકનું બજાર", language: "ભાષા" },
   },
   kn: {
-    sub: "ಜೀವನೋಪಾಯ ಸಹಾಯಕ",
     phone_btn: "ಮುಂದೆ",
     phone_err: "10 ಅಂಕಿಯ ಸಂಖ್ಯೆ ಹಾಕಿ",
     edu: [[0, "ಎಂದೂ ಓದಿಲ್ಲ"], [5, "5ನೇ"], [8, "8ನೇ"], [10, "10ನೇ"], [12, "12ನೇ"], [15, "ಪದವಿ"]],
@@ -706,7 +699,6 @@ export const DATA = {
     slot_label: { district_name: "ಜಿಲ್ಲೆ", education_grade: "ಶಿಕ್ಷಣ", primary_interest: "ಆಸಕ್ತಿ", mobility_constraint: "ತೊಂದರೆ", preference: "ಉದ್ಯಮ/ಉದ್ಯೋಗ", family_occupation: "ಮನೆ ಕೆಲಸ", nearest_market: "ಹತ್ತಿರದ ಮಾರುಕಟ್ಟೆ", language: "ಭಾಷೆ" },
   },
   ml: {
-    sub: "ജീവനോപാധി സഹായി",
     phone_btn: "മുന്നോട്ട്",
     phone_err: "10 അക്ക നമ്പർ നൽകൂ",
     edu: [[0, "ഒരിക്കലും പഠിച്ചിട്ടില്ല"], [5, "5-ാം"], [8, "8-ാം"], [10, "10-ാം"], [12, "12-ാം"], [15, "ബിരുദം"]],
@@ -716,7 +708,6 @@ export const DATA = {
     slot_label: { district_name: "ജില്ല", education_grade: "വിദ്യാഭ്യാസം", primary_interest: "താൽപര്യം", mobility_constraint: "ബുദ്ധിമുട്ട്", preference: "ബിസിനസ്/ജോലി", family_occupation: "വീട്ടുജോലി", nearest_market: "അടുത്ത മാർക്കറ്റ്", language: "ഭാഷ" },
   },
   or: {
-    sub: "ଜୀବିକା ସହାୟକ",
     phone_btn: "ଆଗକୁ ବଢନ୍ତୁ",
     phone_err: "10 ଅଙ୍କ ନମ୍ବର ଦିଅନ୍ତୁ",
     edu: [[0, "କେବେ ପଢିନାହିଁ"], [5, "5ମ"], [8, "8ମ"], [10, "10ମ"], [12, "12ଶ"], [15, "ସ୍ନାତକ"]],
@@ -726,7 +717,6 @@ export const DATA = {
     slot_label: { district_name: "ଜିଲ୍ଲା", education_grade: "ଶିକ୍ଷା", primary_interest: "ପସନ୍ଦ", mobility_constraint: "ଅସୁବିଧା", preference: "ବ୍ୟବସାୟ/ଚାକିରି", family_occupation: "ଘର କାମ", nearest_market: "ପାଖ ବଜାର", language: "ଭାଷା" },
   },
   pa: {
-    sub: "ਰੋਜ਼ੀ-ਰੋਟੀ ਸਹਾਇਕ",
     phone_btn: "ਅੱਗੇ ਵਧੋ",
     phone_err: "10 ਅੰਕਾਂ ਦਾ ਨੰਬਰ ਪਾਓ",
     edu: [[0, "ਕਦੇ ਪੜ੍ਹਿਆ ਨਹੀਂ"], [5, "5ਵੀਂ"], [8, "8ਵੀਂ"], [10, "10ਵੀਂ"], [12, "12ਵੀਂ"], [15, "ਗ੍ਰੈਜੂਏਟ"]],
@@ -736,7 +726,6 @@ export const DATA = {
     slot_label: { district_name: "ਜ਼ਿਲ੍ਹਾ", education_grade: "ਸਿੱਖਿਆ", primary_interest: "ਪਸੰਦ", mobility_constraint: "ਦਿੱਕਤ", preference: "ਕਾਰੋਬਾਰ/ਨੌਕਰੀ", family_occupation: "ਘਰ ਦਾ ਕੰਮ", nearest_market: "ਨੇੜਲਾ ਬਾਜ਼ਾਰ", language: "ਭਾਸ਼ਾ" },
   },
   as: {
-    sub: "জীৱিকা সহায়ক",
     phone_btn: "আগবাঢ়ক",
     phone_err: "10টা সংখ্যাৰ নম্বৰ দিয়ক",
     edu: [[0, "কেতিয়াও পঢ়া নাই"], [5, "5ম"], [8, "8ম"], [10, "10ম"], [12, "12শ"], [15, "স্নাতক"]],
@@ -746,7 +735,6 @@ export const DATA = {
     slot_label: { district_name: "জিলা", education_grade: "শিক্ষা", primary_interest: "ৰুচি", mobility_constraint: "অসুবিধা", preference: "ব্যৱসায়/চাকৰি", family_occupation: "ঘৰৰ কাম", nearest_market: "ওচৰৰ বজাৰ", language: "ভাষা" },
   },
   ur: {
-    sub: "روزی روٹی معاون",
     phone_btn: "آگے بڑھیں",
     phone_err: "10 ہندسوں کا نمبر ڈالیں",
     edu: [[0, "کبھی پڑھا نہیں"], [5, "5ویں"], [8, "8ویں"], [10, "10ویں"], [12, "12ویں"], [15, "گریجویٹ"]],

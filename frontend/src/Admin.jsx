@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
 import { API, api, login, logout } from "./api";
 import { langName } from "./dialogue";
-import { Button } from "./components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
-import { Badge } from "./components/ui/badge";
-import { Input } from "./components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./components/ui/table";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./components/ui";
 
 const EDU = { 0: "No schooling", 5: "Class 5", 8: "Class 8", 10: "Class 10", 12: "Class 12", 15: "Graduate" };
 
@@ -47,11 +43,8 @@ export default function Admin() {
       setOperators((await api("/admin/operators")).operators);
     } catch (e) {
       if (e.message === "401" || e.message === "403") {
-        const denied = e.message === "403";
-        logout();
-        setUser(null);
-        setStats(null);
-        if (denied) setLoginError("Your role can't view this dashboard — sign in as ops, officer, planner, ministry or supervisor.");
+        doLogout();
+        if (e.message === "403") setLoginError("Your role can't view this dashboard — sign in as ops, officer, planner, ministry or supervisor.");
       }
     }
   }

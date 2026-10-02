@@ -117,8 +117,6 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
   // Phone screen
   if (screen === "phone") return (
     <div className="wrap">
-      <h1>PM-AJAY</h1>
-      <p className="sub text-center text-sm text-muted-foreground">{d.sub}</p>
       <Card className="mt-3">
         <CardHeader><CardTitle>{t("phone_q")}</CardTitle></CardHeader>
         <CardContent>

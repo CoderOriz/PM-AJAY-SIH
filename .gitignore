@@ -6,7 +6,12 @@ pmajay.db
 node_modules/
 dist/
 remotion
-# *.md
-# *.yaml
+*.md
+*.yaml
 .env
+Makefile
+*.db
+.gitignore
+
+
 

@@ -13,9 +13,9 @@ PBKDF2_ITERATIONS = 100_000
 TOKEN_TTL_S = 8 * 3600  # one working shift
 
 
-def hash_password(password: str, salt: bytes | None = None) -> str:
+def hash_password(password: str) -> str:
     """PBKDF2-HMAC-SHA256, stored as '<salt_hex>$<hash_hex>'."""
-    salt = salt or os.urandom(16)
+    salt = os.urandom(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, PBKDF2_ITERATIONS)
     return f"{salt.hex()}${digest.hex()}"
 

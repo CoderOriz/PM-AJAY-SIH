@@ -122,9 +122,8 @@ DISTRICT_MIX = [
 ]
 
 
-def ensure_addon_a(db_path=None):
-    db_path = db_path or DB
-    conn = sqlite3.connect(db_path)
+def ensure_addon_a():
+    conn = sqlite3.connect(DB)
     try:
         for stmt in SCHEMA:
             conn.execute(stmt)

@@ -19,12 +19,10 @@ export async function login(username, password) {
   const data = await r.json();
   sessionStorage.setItem("admin_token", data.token);
   sessionStorage.setItem("admin_user", data.username);
-  sessionStorage.setItem("admin_role", data.role);
   return data;
 }
 
 export function logout() {
   sessionStorage.removeItem("admin_token");
   sessionStorage.removeItem("admin_user");
-  sessionStorage.removeItem("admin_role");
 }
