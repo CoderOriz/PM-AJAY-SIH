@@ -46,16 +46,22 @@ export default function Admin() {
       setCentres((await api("/admin/centres")).centres);
       setOperators((await api("/admin/operators")).operators);
     } catch (e) {
-      if (e.message === "401") doLogout(); // expired/invalid token → back to sign-in
+      if (e.message === "401" || e.message === "403") {
+        const denied = e.message === "403";
+        logout();
+        setUser(null);
+        setStats(null);
+        if (denied) setLoginError("Your role can't view this dashboard — sign in as ops, officer, planner, ministry or supervisor.");
+      }
     }
   }
   useEffect(() => { if (user) load(); }, [user]);
 
-  async function act(fn) { // shared admin action: 401 → sign-in; other errors stay silent (e.g. 404 bad QP code)
+  async function act(fn) { // shared admin action: 401/403 → sign-in; other errors stay silent (e.g. 404 bad QP code)
     try {
       await fn();
     } catch (e) {
-      if (e.message === "401") { doLogout(); return; }
+      if (e.message === "401" || e.message === "403") { doLogout(); return; }
     }
     load();
   }
