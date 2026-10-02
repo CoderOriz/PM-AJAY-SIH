@@ -2,7 +2,7 @@
 
 Voice-first livelihood assistant for PM-AJAY (GIA) SC beneficiaries (SIH 2025, Pune pilot, Marathi + Hindi demo). **Advisory only**: nothing grants or implies a benefit decision; no Aadhaar anywhere in the code; community data never enters the main profile — it goes to a separate `beneficiary_community` table via the separately-consented `/session/{id}/community` endpoint.
 
-**Reality check before planning anything:** the planning docs at the repo root (`SPEC.md`, `tasks.yaml`, `HUMAN_TASKS.md`) describe a much larger production architecture — `src/pmajay/` package tree, PostgreSQL + Redis, Docker, IVR/SMS/WhatsApp vendor channels, `make check` workflow. **None of that exists.** The actual code is the demo below, built from `PM_AJAY_Implementation_Plan_v2 (1).md` + the Addon A doc. Adapt plan items to this codebase instead of recreating the planned layout.
+**Reality check before planning anything:** the planning docs at the repo root (`SPEC.md`, `HUMAN_TASKS.md`) describe a much larger production architecture — `src/pmajay/` package tree, PostgreSQL + Redis, Docker, IVR/SMS/WhatsApp vendor channels. **None of that exists.** The actual code is the demo below, built from `PM_AJAY_Implementation_Plan_v2 (1).md` + the Addon A doc. Adapt plan items to this codebase instead of recreating the planned layout.
 
 ## Layout — standalone dirs; the root has only a Makefile + .env.example (no root package.json)
 - `backend/` — single-file FastAPI app (`main.py`) on SQLite. `requirements.txt` is just fastapi + uvicorn.
@@ -50,4 +50,3 @@ Anything with a `ponytail:` comment is an intentional, recorded tradeoff: demo s
 - `seed.py` resets `pmajay.db` from scratch (`os.remove`) — re-running it **wipes all session data**; never run it against a DB with real data.
 - Brand strings live in three places: `frontend/src/App.jsx` (header), `extension/manifest.json`, and the FastAPI title in `main.py`; the walkthrough video uses the "Saksham Sathi" name — keep them in sync if renaming.
 - `*.png` is gitignored too (screenshots stay local). Commits go straight to `main`, style `Type: Description` (`Fix: …`, `Update: …`).
-- `tasks.yaml` statuses are all `todo` and its acceptance commands (`make check`, `make invariants`) reference tooling that doesn't exist — see the reality check above before treating it as a work tracker.
