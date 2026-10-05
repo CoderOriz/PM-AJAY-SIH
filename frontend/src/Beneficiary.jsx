@@ -6,9 +6,9 @@ import { RecCard } from "./components/Beneficiary/RecCard";
 import { Button, Badge, Card, CardContent, CardHeader, CardTitle, Input } from "./components/ui";
 
 
-export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
+export default function Beneficiary({ opMode, opId, setOpMode, setOpId, uiLang, setUiLang, presetInterest, onProgress }) {
   const [screen, setScreen] = useState("phone");
-  const [lang, setLang] = useState("mr");
+  const [lang, setLang] = useState(uiLang || "mr");
   const [sid, setSid] = useState(null);
   const [confirmed, setConfirmed] = useState({});
   const [slotIdx, setSlotIdx] = useState(0);
@@ -30,6 +30,21 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
     : null;
 
   useEffect(() => { preloadVoices(); }, []);
+  // Keep the site chrome language and the dialogue language in sync (regional UI).
+  useEffect(() => { if (uiLang && uiLang !== lang) setLang(uiLang); }, [uiLang]);
+  useEffect(() => { if (setUiLang && lang !== uiLang) setUiLang(lang); }, [lang]);
+  // Report journey progress outward for the themed journey builder (logic unchanged).
+  useEffect(() => {
+    if (!onProgress) return;
+    const stage = screen === "recs" ? 3 : screen === "partial" ? 2 : (screen === "slot" || screen === "echo") ? (slotIdx >= 3 ? 2 : 1) : 0;
+    onProgress(stage, screen, Object.keys(confirmed).length);
+  }, [screen, slotIdx, confirmed, recs]);
+  // A skill picked in Explore & Discover arrives pre-filled on the interest slot.
+  useEffect(() => {
+    if (presetInterest && screen === "slot" && SLOTS[slotIdx] && SLOTS[slotIdx].key === "primary_interest" && !textVal) {
+      setTextVal(presetInterest);
+    }
+  }, [presetInterest, screen, slotIdx]);
   useEffect(() => {
     if (screen === "consent") speak(t("consent"), lang);
     else if (screen === "resume") speak(t("resume_q"), lang);
