@@ -8,7 +8,18 @@ per A8 step 1 (Ladakh 37 and small UTs especially).
 import os
 import sqlite3
 
-DB = os.path.join(os.path.dirname(__file__), "pmajay.db")
+def _resolve_db():
+    override = os.environ.get("PM_AJAY_DB")
+    if override:
+        base = override
+    elif os.environ.get("VERCEL"):
+        base = "/tmp/pmajay.db"
+    else:
+        base = "pmajay.db"
+    return base if os.path.isabs(base) else os.path.join(os.path.dirname(__file__), base)
+
+
+DB = _resolve_db()
 
 SCHEMA = [
     """CREATE TABLE IF NOT EXISTS sc_community_registry (

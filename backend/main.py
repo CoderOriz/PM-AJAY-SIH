@@ -17,7 +17,18 @@ from pydantic import BaseModel
 from seed_addon_a import ensure_addon_a  # Addon A A4.2 reference tables
 import auth  # Q3/RBAC: PBKDF2 passwords + HS256 JWT (stdlib only, no pyjwt)
 
-DB = os.path.join(os.path.dirname(__file__), os.environ.get("PM_AJAY_DB", "pmajay.db"))
+def _resolve_db():
+    override = os.environ.get("PM_AJAY_DB")
+    if override:
+        base = override
+    elif os.environ.get("VERCEL"):
+        base = "/tmp/pmajay.db"
+    else:
+        base = "pmajay.db"
+    return base if os.path.isabs(base) else os.path.join(os.path.dirname(__file__), base)
+
+
+DB = _resolve_db()
 RESUME_WINDOW = timedelta(hours=48)  # C4: phone number is the session key, no PIN
 # ponytail: fixed demo salt; env-provided secret before real data (.env.example).
 # Changing PM_AJAY_SALT invalidates every stored session's phone_hash.
@@ -57,6 +68,107 @@ def ensure_admin_users():
 
 
 ensure_admin_users()
+
+
+CORE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS qps (
+  id INTEGER PRIMARY KEY,
+  code TEXT UNIQUE,
+  title TEXT,
+  sector TEXT,
+  nsqf_level INTEGER,
+  duration_months INTEGER,
+  min_education TEXT,
+  physical_req TEXT,
+  scheme_flags TEXT
+);
+CREATE TABLE IF NOT EXISTS centres (
+  id INTEGER PRIMARY KEY,
+  name TEXT,
+  district_lgd TEXT,
+  district_name TEXT,
+  lat REAL,
+  lng REAL,
+  phone TEXT,
+  last_verified TEXT,
+  status TEXT,
+  qp_codes TEXT
+);
+CREATE TABLE IF NOT EXISTS sessions (
+  id TEXT PRIMARY KEY,
+  phone_hash TEXT,
+  created_at TEXT,
+  updated_at TEXT,
+  state_json TEXT
+);
+CREATE TABLE IF NOT EXISTS recommendations (
+  id INTEGER PRIMARY KEY,
+  session_id TEXT,
+  qp_code TEXT,
+  qp_title TEXT,
+  created_at TEXT
+);
+CREATE TABLE IF NOT EXISTS outcomes (
+  session_id TEXT,
+  result TEXT,
+  created_at TEXT
+);
+CREATE TABLE IF NOT EXISTS operators (
+  id INTEGER PRIMARY KEY,
+  name TEXT,
+  certified INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS pinned_courses (
+  district_lgd TEXT,
+  qp_code TEXT
+);
+CREATE TABLE IF NOT EXISTS districts (lgd TEXT PRIMARY KEY, name TEXT);
+"""
+
+
+def ensure_core():
+    """Vercel: fresh /tmp DB has no core tables — create + seed if empty (idempotent).
+
+    Same deterministic demo data as seed.py (seed 42) but without wiping;
+    existing DBs (qps present) are left untouched.
+    """
+    with db() as conn:
+        conn.executescript(CORE_SCHEMA)
+        if conn.execute("SELECT COUNT(*) FROM qps").fetchone()[0] > 0:
+            return
+    import random
+    from seed import AREAS, DISTRICTS, PHYSICAL, SCHEME_FLAGS, SECTORS
+    random.seed(42)
+    with db() as conn:
+        qpcodes = []
+        n = 0
+        for abbr, sector, roles in SECTORS:
+            for title, level, edu in roles:
+                code = f"{abbr}/Q{n + 1:04d}"
+                n += 1
+                qpcodes.append(code)
+                conn.execute(
+                    "INSERT OR IGNORE INTO qps VALUES (?,?,?,?,?,?,?,?,?)",
+                    (None, code, title, sector, level,
+                     random.choice([3, 6, 9, 12]), edu,
+                     random.choice(PHYSICAL), random.choice(SCHEME_FLAGS)),
+                )
+        random.shuffle(qpcodes)
+        chunks = [qpcodes[i::len(AREAS)] for i in range(len(AREAS))]
+        for i, (name, lat, lng) in enumerate(AREAS):
+            verified = date.today() - timedelta(days=45 if i == 8 else 3)
+            status = "unresponsive" if i == 12 else "active"
+            conn.execute(
+                "INSERT INTO centres VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (None, name, "523", "Pune", lat, lng,
+                 f"020-27{random.randint(100000, 999999)}",
+                 verified.isoformat(), status, json.dumps(chunks[i])),
+            )
+        for name, lgd in DISTRICTS.items():
+            conn.execute("INSERT OR IGNORE INTO districts VALUES (?,?)", (lgd, name))
+
+
+ensure_core()
 
 
 def phone_hash(phone: str) -> str:
