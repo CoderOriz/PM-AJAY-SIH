@@ -6,7 +6,7 @@ Voice-first livelihood assistant for PM-AJAY (GIA) SC beneficiaries (SIH 2025, P
 
 ## Layout — standalone dirs; the root has only a Makefile + .env.example (no root package.json)
 - `backend/` — single-file FastAPI app (`main.py`) on SQLite. `requirements.txt` is just fastapi + uvicorn.
-- `frontend/` — React 19 + Vite 7 + Tailwind 4 (via `@tailwindcss/vite`). No router package — views switch on `location.hash` (`#admin` → Admin).
+- `frontend/` — React 19 + Vite 7 + Tailwind 4 (via `@tailwindcss/vite`). No router package — views switch on `location.hash` (`#admin` → Admin). Landing site (`App.jsx` + `components/theme/`, styles in `theme.css`) wraps the flow; site chrome strings live in `src/i18n.js` (`ui(lang)`, full 12-language coverage, no emojis — use inline SVG).
 - `extension/` — Chrome MV3 companion (`popup.html` + `sidepanel.html` + `content.js`), plain JS, no build step.
 - `remotion/` — walkthrough video. **Gitignored entirely — edits there cannot be committed.**
 - `docs/` — process records: `ASSUMPTIONS.md` (plan assumptions from SPEC s20), `DECISIONS.md` (ADRs), `QUESTIONS.md` (open items). Record deviations from SPEC there.

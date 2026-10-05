@@ -188,9 +188,9 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId, uiLang, 
       <Card className="mt-3">
         <CardHeader><CardTitle>{t("resume_q")}</CardTitle></CardHeader>
         <CardContent>
-          <p className="summary">
+          <div className="summary">
             {Object.entries(confirmed).map(([k, v]) => d.slot_label[k] ? <div key={k}><b>{d.slot_label[k]}:</b> {dispOf(k, v, lang)}</div> : null)}
-          </p>
+          </div>
           <Button onClick={() => resumeOk(true)}>{t("resume_ok")}</Button>
           <Button variant="outline" onClick={() => resumeOk(false)}>{t("resume_chg")}</Button>
         </CardContent>

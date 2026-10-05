@@ -43,7 +43,7 @@ export default function OpportunityMap({ s, onDetails }) {
           {(f === "jobs" || f === "ent" || f === "all") && (
             <div className="centre-card" style={{ borderStyle: "dashed" }}>
               <div className="font-extrabold text-sm">{f === "ent" ? s.fEnt : s.fJobs}</div>
-              <div className="text-xs opacity-60 mt-1">Personalized openings appear after your profile is complete — finish the conversation below.</div>
+              <div className="text-xs opacity-60 mt-1">{s.jobsNote}</div>
             </div>
           )}
         </div>
@@ -70,7 +70,7 @@ export default function OpportunityMap({ s, onDetails }) {
           <div className="absolute right-3 top-3 left-3 sm:left-auto sm:w-64">
             <div className="centre-card">
               <div className="font-extrabold text-sm">{featured.name}</div>
-              <div className="text-xs mt-2 leading-relaxed opacity-70">3.2 km away · NSQF Level 4<br />3 months · Hands-on training<br />Placement support</div>
+              <div className="text-xs mt-2 leading-relaxed opacity-70">3.2 {s.featKm} · NSQF Level 4<br />3 {s.featMonths} · {s.featHands}<br />{s.featPlace}</div>
               <button className="t-pill w-full justify-center mt-3" onClick={() => onDetails(featured)}>
                 {s.viewDetails} →
               </button>

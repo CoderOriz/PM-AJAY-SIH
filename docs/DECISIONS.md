@@ -34,3 +34,9 @@ ADR-style records for decisions that depart from `SPEC.md`/`tasks.yaml`. Newest 
 - **Why:** resolves QUESTIONS Q3 (SPEC s15: JWT + RBAC) without new dependencies.
 - **Pilot swap:** pyjwt/OAuth IdP + a real user store; the beneficiary flow stays session-keyed without auth.
 - **Status:** accepted (2026-10-02)
+
+## D7 — Merged updated-frontend4 themed landing site into main
+- **Decision:** kept the branch's landing/sections architecture (`App.jsx` site shell + `components/theme/`, `theme.css`, `i18n.js`) on top of main's newer work (Saksham Sathi branding, admin RBAC, navy/teal buttons, 12-language rec cards); conflicts resolved toward branch UI + main logic.
+- **Why:** user direction — branch UI wins, everything must keep working.
+- **Follow-ups folded in:** zero-emoji rule (inline SVG icons only), full 12-language `i18n.js` coverage (77 keys each, verified by script — LIGHT subset removed as a concept), TTS utterances always tagged with the requested BCP-47 language even on fallback voices (was: mistagged e.g. Marathi as hi-IN).
+- **Status:** accepted (2026-10-05)

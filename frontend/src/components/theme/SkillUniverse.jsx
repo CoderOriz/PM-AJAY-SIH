@@ -2,24 +2,25 @@ import { useMemo, useState } from "react";
 
 // Sector -> backend primary_interest keyword (keeps recommendation logic intact)
 export const SECTORS = [
-  { icon: "1", en: "Construction & Infrastructure", kw: "carpentry", x: 50, y: 8 },
-  { icon: "2", en: "Healthcare & Caregiving", kw: "beauty", x: 76, y: 16 },
-  { icon: "3", en: "Digital & IT", kw: "mobile repair", x: 86, y: 38 },
-  { icon: "4", en: "Transport & Logistics", kw: "shop", x: 78, y: 60 },
-  { icon: "5", en: "Food & Hospitality", kw: "shop", x: 62, y: 78 },
-  { icon: "6", en: "Retail & Services", kw: "shop", x: 42, y: 84 },
-  { icon: "7", en: "Textiles & Handicrafts", kw: "tailoring", x: 24, y: 72 },
-  { icon: "8", en: "Green Energy", kw: "mobile repair", x: 14, y: 52 },
-  { icon: "9", en: "Electrical & Electronics", kw: "mobile repair", x: 16, y: 30 },
-  { icon: "10", en: "Agriculture & Allied Activities", kw: "farming", x: 30, y: 13 },
+  { icon: "1", k: "sec1", en: "Construction & Infrastructure", kw: "carpentry", x: 50, y: 8 },
+  { icon: "2", k: "sec2", en: "Healthcare & Caregiving", kw: "beauty", x: 76, y: 16 },
+  { icon: "3", k: "sec3", en: "Digital & IT", kw: "mobile repair", x: 86, y: 38 },
+  { icon: "4", k: "sec4", en: "Transport & Logistics", kw: "shop", x: 78, y: 60 },
+  { icon: "5", k: "sec5", en: "Food & Hospitality", kw: "shop", x: 62, y: 78 },
+  { icon: "6", k: "sec6", en: "Retail & Services", kw: "shop", x: 42, y: 84 },
+  { icon: "7", k: "sec7", en: "Textiles & Handicrafts", kw: "tailoring", x: 24, y: 72 },
+  { icon: "8", k: "sec8", en: "Green Energy", kw: "mobile repair", x: 14, y: 52 },
+  { icon: "9", k: "sec9", en: "Electrical & Electronics", kw: "mobile repair", x: 16, y: 30 },
+  { icon: "10", k: "sec10", en: "Agriculture & Allied Activities", kw: "farming", x: 30, y: 13 },
 ];
 
 export default function SkillUniverse({ s, onPick }) {
   const [q, setQ] = useState("");
   const [active, setActive] = useState(null);
   const list = useMemo(
-    () => SECTORS.filter((x) => x.en.toLowerCase().includes(q.trim().toLowerCase())),
-    [q]
+    () => SECTORS.filter((x) => (x.en + " " + (s[x.k] || "")).toLowerCase().includes(q.trim().toLowerCase())),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [q, s]
   );
   return (
     <div>
@@ -35,7 +36,7 @@ export default function SkillUniverse({ s, onPick }) {
             {list.map((x) => (
               <button key={x.en} className={`chip ${active === x.en ? "on" : ""}`}
                 onClick={() => { setActive(x.en); onPick(x.kw, x.en); }}>
-                {x.icon} {x.en}
+                {x.icon} {s[x.k] || x.en}
               </button>
             ))}
             {!list.length && <span className="text-sm opacity-60">—</span>}
@@ -55,9 +56,9 @@ export default function SkillUniverse({ s, onPick }) {
           {SECTORS.map((x) => (
             <button key={x.en} className={`uni-node ${active === x.en ? "active" : ""}`}
               style={{ left: `${x.x}%`, top: `${x.y}%` }}
-              onClick={() => { setActive(x.en); onPick(x.kw, x.en); }} title={x.en}>
+              onClick={() => { setActive(x.en); onPick(x.kw, x.en); }} title={s[x.k] || x.en}>
               <span className="bub">{x.icon}</span>
-              <span className="cap">{x.en}</span>
+              <span className="cap">{s[x.k] || x.en}</span>
             </button>
           ))}
           <div className="absolute right-4 top-1/2 text-[11px] font-bold opacity-50 text-center leading-relaxed">

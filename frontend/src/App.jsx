@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Beneficiary from "./Beneficiary";
 import Admin from "./Admin";
 import Landing from "./components/theme/Landing";
@@ -21,6 +21,7 @@ export default function App() {
   const [talkKey, setTalkKey] = useState(0);
   const s = ui(uiLang);
   const rootRef = useRevealRoot();
+  useEffect(() => { document.documentElement.lang = uiLang; }, [uiLang]);
 
   const talkRef = useRef(null);
   const exploreRef = useRef(null);
@@ -78,14 +79,14 @@ export default function App() {
         <main id="top" className="mx-auto w-full max-w-6xl px-4 pb-16">
           {/* 1 — Landing */}
           <section className="t-section">
-            <span className="t-kicker"><span className="n">1</span> Landing Page – Your Journey Begins</span>
+            <span className="t-kicker"><span className="n">1</span> {s.landKicker}</span>
             <div className="mt-4"><Landing s={s} onStart={() => startTalk()} onExplore={() => go(exploreRef)} /></div>
           </section>
 
           {/* 2 — Skill universe */}
           <section className="t-section" ref={exploreRef} id="explore">
             <div className="t-panel"><div className="t-panel-head">
-              <span className="t-kicker"><span className="n">2</span> Interactive Skill Universe – Explore &amp; Discover</span>
+              <span className="t-kicker"><span className="n">2</span> {s.exploreKicker}</span>
             </div>
             <div className="p-6 md:p-7"><SkillUniverse s={s} onPick={(kw) => startTalk(kw)} /></div></div>
           </section>

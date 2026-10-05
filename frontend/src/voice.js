@@ -36,7 +36,10 @@ export function speak(txt, lang) {
     const u = new SpeechSynthesisUtterance(txt);
     const v = bestVoice(lang);
     if (v) u.voice = v;
-    u.lang = v ? v.lang : speechTag(lang);
+    // Always tag the REQUESTED language, even on fallback voices — tagging
+    // Marathi text as hi-IN misleads pronunciation engines. The fallback voice
+    // only renders audio (same-script voices read acceptably cross-language).
+    u.lang = speechTag(lang);
     u.rate = 0.9;
     synth.speak(u);
   } catch (e) { /* silent — input fallbacks still work */ }
