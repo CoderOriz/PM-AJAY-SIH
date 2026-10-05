@@ -26,7 +26,7 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
   const t = k => D[lang][k];
   const d = DATA[lang];
   const recsList = recs && Array.isArray(recs.recommendations)
-    ? recs.recommendations.map((r, i) => <RecCard key={i} r={r} t={t} />)
+    ? recs.recommendations.map((r, i) => <RecCard key={i} r={r} t={t} lang={lang} />)
     : null;
 
   useEffect(() => { preloadVoices(); }, []);
@@ -272,7 +272,7 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
             <div className="mt-3">
               <Badge variant="secondary">{t("asp_badge")}</Badge>
               <p className="text-sm text-muted-foreground mt-1 mb-2">{t("override_note")}</p>
-              <RecCard r={recs.aspiration_override} t={t} />
+              <RecCard r={recs.aspiration_override} t={t} lang={lang} />
             </div>
           )}
           <Button onClick={() => { setSlotIdx(SLOTS.findIndex(s => s.call === 2)); setScreen("slot"); }}>
@@ -295,7 +295,7 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
             <div className="mt-3">
               <Badge variant="secondary">{t("asp_badge")}</Badge>
               <p className="text-sm text-muted-foreground mt-1 mb-2">{t("override_note")}</p>
-              <RecCard r={recs.aspiration_override} t={t} />
+              <RecCard r={recs.aspiration_override} t={t} lang={lang} />
             </div>
           )}
           <div className="flex flex-col gap-1 mt-5">
