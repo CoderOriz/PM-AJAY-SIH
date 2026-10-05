@@ -147,8 +147,9 @@ export default function Admin() {
   const opTotal = stats.operators?.total || 0;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-6">
-      <h1 className="text-xl font-bold mt-2">PM-AJAY — GIA Dashboard <span className="text-xs font-normal text-muted-foreground">(Pune pilot)</span></h1>
+    <div className="mx-auto w-full max-w-5xl px-2 py-6">
+      <div className="t-panel p-5 md:p-7" style={{ borderRadius: 22 }}>
+      <h1 className="serif text-xl font-bold mt-2">PM-AJAY — GIA Dashboard <span className="text-xs font-normal text-muted-foreground">(Pune pilot)</span></h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
         <Card><CardContent className="p-4"><div className="text-3xl font-bold">{stats.total_sessions}<small className="block text-xs text-muted-foreground font-normal mt-1">sessions started</small></div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="text-3xl font-bold">{stats.consented}<small className="block text-xs text-muted-foreground font-normal mt-1">consent given (H7)</small></div></CardContent></Card>
@@ -206,7 +207,7 @@ export default function Admin() {
             <div className="mt-3 flex flex-wrap gap-2">
               {(stats.pins || []).map(p => (
                 <Badge key={p.qp_code} variant="secondary" className="cursor-pointer" onClick={() => unpin(p.qp_code)}>
-                  {p.qp_code} (Pune) ✕
+                  {p.qp_code} (Pune) ×
                 </Badge>
               ))}
               {!(stats.pins || []).length && <span className="text-sm text-muted-foreground">None pinned</span>}
@@ -219,7 +220,7 @@ export default function Admin() {
         <Card>
           <CardHeader><CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Training centres (C6)</CardTitle></CardHeader>
           <CardContent>
-            <div className="text-sm mb-2">{stats.centres.active} active · {stats.centres.stale} stale (>30 days) · {stats.centres.unresponsive} unresponsive</div>
+            <div className="text-sm mb-2">{stats.centres.active} active · {stats.centres.stale} stale (&gt;30 days) · {stats.centres.unresponsive} unresponsive</div>
             <Table>
               <TableHeader><TableRow><TableHead>Centre</TableHead><TableHead>Status</TableHead><TableHead>Verified</TableHead><TableHead></TableHead></TableRow></TableHeader>
               <TableBody>
@@ -273,6 +274,7 @@ export default function Admin() {
 
       <button className="btn inline-block mt-5 px-4 py-2.5 rounded-xl bg-secondary text-white font-semibold no-underline cursor-pointer" onClick={downloadCsv}>Ministry export (CSV)</button>
       <p className="note text-xs text-muted-foreground mt-4">Aggregate-only view — individual records require supervisor-approved audit-log access (C3). Admin routes are JWT + RBAC gated (Q3) — signed in as {user}.</p>
+      </div>
     </div>
   );
 }

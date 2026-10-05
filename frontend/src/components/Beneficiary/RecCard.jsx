@@ -39,7 +39,7 @@ export function RecCard({ r, t, lang }) {
           </div>
           {r.centre && (
             <div className="flex flex-row items-center justify-between gap-3 sm:flex-col sm:items-center sm:justify-start sm:gap-2 sm:shrink-0 sm:pt-1">
-              <a href={qrValue || undefined} className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground no-underline shadow-sm">📞 Call</a>
+              <a href={qrValue || undefined} className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground no-underline shadow-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.13.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.45c.9.34 1.84.57 2.8.7A2 2 0 0 1 22 16.9z" /></svg>Call</a>
               {qrValue && (
                 <>
                   <QRCode value={qrValue} size={64} />
