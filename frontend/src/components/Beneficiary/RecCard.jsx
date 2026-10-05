@@ -11,7 +11,7 @@ export function RecCard({ r, t }) {
         <div className="flex gap-3 items-start">
           <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          {r.pinned && <Badge>{t("pinned_badge")}</Badge>}
+          {r.pinned && <Badge variant="accent">{t("pinned_badge")}</Badge>}
           {r.rpl && <Badge variant="secondary">{t("rpl_badge")}</Badge>}
           <span className="font-bold text-[1.1rem]">{r.title}</span>
         </div>
@@ -20,7 +20,7 @@ export function RecCard({ r, t }) {
           <div className="mt-1">
             <Badge variant={GAP_VARIANT[r.gap]} className="mr-2">{t("gap_" + r.gap)}</Badge>
             {r.centre
-              ? <> · {r.centre.name}{r.distance_km != null ? ` · ${t("dist")} ${r.distance_km} ${t("km")}` : ""}{r.centre_stale ? ` · ${t("stale")}` : ""} · <a className="font-bold text-secondary" href={`tel:${r.centre.phone}`}>{r.centre.phone}</a></>
+              ? <> · {r.centre.name}{r.distance_km != null ? ` · ${t("dist")} ${r.distance_km} ${t("km")}` : ""}{r.centre_stale ? ` · ${t("stale")}` : ""} · <span className="font-semibold">{r.centre.phone}</span></>
               : <> · {t("no_centre")}</>}
           </div>
           {r.rpl && (
@@ -31,10 +31,15 @@ export function RecCard({ r, t }) {
           {r.dropout_risk === "high" && <div className="mt-1.5 text-destructive font-medium">{t("dropout_warn")}</div>}
         </div>
           </div>
-          {qrValue && (
-            <div className="flex flex-col items-center gap-1 shrink-0 pt-1">
-              <QRCode value={qrValue} size={64} />
-              <span className="text-[11px] text-muted-foreground text-center leading-tight">{t("qr_call")}</span>
+          {r.centre && (
+            <div className="flex flex-col items-center gap-2 shrink-0 pt-1">
+              <a href={qrValue || undefined} className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground no-underline shadow-sm">📞 Call</a>
+              {qrValue && (
+                <>
+                  <QRCode value={qrValue} size={64} />
+                  <span className="text-[11px] text-muted-foreground text-center leading-tight">{t("qr_call")}</span>
+                </>
+              )}
             </div>
           )}
         </div>

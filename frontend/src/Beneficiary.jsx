@@ -222,7 +222,18 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
                 )}
                 <Input type="text" value={textVal} placeholder="..."
                   onChange={e => setTextVal(e.target.value)} className="mt-3" />
-                {hasSR() && <Button variant="outline" onClick={onMic}>{lang === "hi" ? "🎤 बोलें" : "🎤 बोला"}</Button>}
+                {hasSR() && (
+                  <div>
+                    <button type="button" onClick={onMic} title={lang === "hi" ? "बोलें" : "बोला"} aria-label={lang === "hi" ? "बोलें" : "बोला"} className="mic-btn">
+                      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                        <rect x="9" y="3" width="6" height="11" rx="3" fill="#fff" stroke="none" />
+                        <path d="M5 11v1a7 7 0 0 0 14 0v-1" />
+                        <line x1="12" y1="19" x2="12" y2="22" />
+                        <line x1="9" y1="22" x2="15" y2="22" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
                 <Button onClick={() => textVal.trim() ? echo(textVal.trim(), textVal.trim()) : setErr(t("err"))}>{t("send")}</Button>
               </>
             )}

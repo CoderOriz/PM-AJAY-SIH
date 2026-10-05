@@ -17,10 +17,10 @@ export default function App() {
       <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-base font-bold text-primary-foreground">प</div>
+            <img src="/saksham-sathi-icon.svg" alt="Saksham Sathi icon" className="h-9 w-9 rounded-xl" />
             <div className="leading-tight">
-              <div className="text-sm font-bold">PM-AJAY</div>
-              <div className="text-[10px] text-muted-foreground">उपजीविका सहाय्यक · GIA</div>
+              <div className="text-sm font-bold">Saksham Sathi</div>
+              <div className="text-[10px] text-muted-foreground">उपजीविका सहाय्यक · PM-AJAY GIA</div>
             </div>
           </div>
           <Button variant="outline" size="sm" className="mt-0 w-auto rounded-full px-4" onClick={switchView}>

@@ -12,6 +12,9 @@ remotion
 Makefile
 *.db
 .gitignore
+.opencode/
+docs/
+
 
 
 
