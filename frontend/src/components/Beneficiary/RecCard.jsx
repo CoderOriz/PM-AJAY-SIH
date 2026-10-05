@@ -8,7 +8,7 @@ export function RecCard({ r, t }) {
   return (
     <Card className="rec">
       <CardContent className="pt-2">
-        <div className="flex gap-3 items-start">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
           <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           {r.pinned && <Badge variant="accent">{t("pinned_badge")}</Badge>}
@@ -20,7 +20,7 @@ export function RecCard({ r, t }) {
           <div className="mt-1">
             <Badge variant={GAP_VARIANT[r.gap]} className="mr-2">{t("gap_" + r.gap)}</Badge>
             {r.centre
-              ? <> · {r.centre.name}{r.distance_km != null ? ` · ${t("dist")} ${r.distance_km} ${t("km")}` : ""}{r.centre_stale ? ` · ${t("stale")}` : ""} · <span className="font-semibold">{r.centre.phone}</span></>
+              ? <> · {r.centre.name}{r.distance_km != null ? ` · ${t("dist")} ${r.distance_km} ${t("km")}` : ""}{r.centre_stale ? ` · ${t("stale")}` : ""} · <span className="font-semibold whitespace-nowrap">{r.centre.phone}</span></>
               : <> · {t("no_centre")}</>}
           </div>
           {r.rpl && (
@@ -32,8 +32,8 @@ export function RecCard({ r, t }) {
         </div>
           </div>
           {r.centre && (
-            <div className="flex flex-col items-center gap-2 shrink-0 pt-1">
-              <a href={qrValue || undefined} className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground no-underline shadow-sm">📞 Call</a>
+            <div className="flex flex-row items-center justify-between gap-3 sm:flex-col sm:items-center sm:justify-start sm:gap-2 sm:shrink-0 sm:pt-1">
+              <a href={qrValue || undefined} className="inline-flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground no-underline shadow-sm">📞 Call</a>
               {qrValue && (
                 <>
                   <QRCode value={qrValue} size={64} />

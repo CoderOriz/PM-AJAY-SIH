@@ -13,5 +13,5 @@ export function CardTitle({ className, ...props }) {
 }
 
 export function CardContent({ className, ...props }) {
-  return <div className={cn("p-5", className)} {...props} />;
+  return <div className={cn("p-4 sm:p-5", className)} {...props} />;
 }
