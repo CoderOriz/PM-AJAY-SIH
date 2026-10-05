@@ -223,7 +223,7 @@ export default function Beneficiary({ opMode, opId, setOpMode, setOpId }) {
                 <Input type="text" value={textVal} placeholder="..."
                   onChange={e => setTextVal(e.target.value)} className="mt-3" />
                 {hasSR() && (
-                  <div>
+                  <div className="flex justify-center mt-4">
                     <button type="button" onClick={onMic} title={lang === "hi" ? "बोलें" : "बोला"} aria-label={lang === "hi" ? "बोलें" : "बोला"} className="mic-btn">
                       <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                         <rect x="9" y="3" width="6" height="11" rx="3" fill="#fff" stroke="none" />

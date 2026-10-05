@@ -19,9 +19,9 @@ export function RecCard({ r, t, lang }) {
           <span className="font-bold text-[1.1rem]">{title}</span>
         </div>
         {title !== r.title && (
-          <div className="text-sm text-muted-foreground -mt-1">{r.title}</div>
+          <div className="text-sm text-muted-foreground mt-1">{r.title}</div>
         )}
-        <div className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+        <div className="text-sm text-muted-foreground mt-1 leading-relaxed">
           {sector} · NSQF {t("level")} {r.nsqf_level} · {r.duration_months} {t("months")} · {r.scheme}
           <div className="mt-1">
             <Badge variant={GAP_VARIANT[r.gap]} className="mr-2">{t("gap_" + r.gap)}</Badge>
